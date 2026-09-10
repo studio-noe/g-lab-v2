@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>G-LAB 디자인 가이드</title>
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+<link rel="icon" href="icon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=LINE+Seed+JP:wght@700&amp;display=swap">
+<style>
+/* ---------------------------------------------------------------------------
+   index.html 의 토큰과 컴포넌트 CSS 를 그대로 가져왔다.
+   여기서 보이는 것이 사이트에서 보이는 것과 같아야 한다.
+--------------------------------------------------------------------------- */
+:root{
+  --ink:#000; --paper:#fff; --dim:#767676; --hair:#dcdcdc; --line:#93979b;
+  --acc:#ffc800;            /* 형광펜. 검정 글자와 13.5:1 */
+  --acc-soft:#ffeaa8;       /* 같은 노랑 37% 농도. 일요일 장거리용 */
+  --g:minmax(0,1fr);
+}
+*{box-sizing:border-box}
+button{color:inherit}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);
+ font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Helvetica Neue",Arial,sans-serif;
+ font-size:15px;line-height:1.5;font-feature-settings:"tnum" 1;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1240px;margin:0 auto;padding:0 28px 96px}
+a{color:inherit}
+:focus-visible{outline:2px solid #000;outline-offset:2px}
+
+/* ---- 마스트헤드 ---- */
+.mast{padding:40px 0 0}
+.eyebrow{display:grid;grid-template-columns:1fr auto;align-items:center;gap:14px;
+ font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+ padding-bottom:10px;border-bottom:2px solid #000}
+.eyebrow b{color:#000;font-weight:800;letter-spacing:.06em}
+.eyebrow .r{justify-self:end;text-transform:none;letter-spacing:.02em;color:var(--dim);white-space:nowrap}
+h1{margin:22px 0 0;font-weight:700;
+ font-family:"LINE Seed JP","Pretendard Variable",Pretendard,-apple-system,sans-serif;
+ font-size:clamp(48px,10vw,120px);line-height:.86;letter-spacing:-.03em}
+h1 em{font-style:normal;background:var(--acc);padding:0 .06em}
+.sub{margin:16px 0 0;font-size:clamp(15px,2vw,19px);font-weight:500;letter-spacing:-.01em;max-width:56ch}
+
+/* ---- 섹션 ---- */
+section{margin:58px 0 0}
+.shead{display:flex;gap:14px;align-items:baseline;border-bottom:1px solid #000;
+ padding-bottom:8px;margin-bottom:20px;min-height:34px}
+.shead h2{margin:0;font-size:17px;font-weight:700;letter-spacing:-.01em}
+.shead span{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin-left:auto;white-space:nowrap}
+.lede{margin:-8px 0 22px;font-size:13px;color:var(--dim);max-width:74ch;line-height:1.75}
+
+/* ---- 가이드 전용 : 항목 나열 ---- */
+.rows{border-bottom:1px solid #000}
+.row{display:flex;gap:24px;align-items:center;padding:13px 0;border-bottom:1px solid var(--hair)}
+.row:last-child{border-bottom:0}
+.row .k{flex:none;width:118px;font-size:14px;font-weight:700;letter-spacing:-.01em}
+.row .v{flex:none;width:104px;font-size:12.5px;color:var(--dim);font-variant-numeric:tabular-nums}
+.row .u{flex:1;min-width:0;font-size:13px;color:var(--dim)}
+.row .sw{flex:none;width:66px;height:38px;border:1px solid var(--hair)}
+.row .ln{flex:none;width:280px}
+.row .ln i{display:block}
+.row .bar{flex:none;width:74px}
+.row .bar i{display:block;height:16px;background:var(--acc)}
+.row .n{flex:none;width:30px;font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--dim)}
+.row .t{flex:none;width:180px;font-size:14.5px;font-weight:700;letter-spacing:-.01em}
+.row .d{flex:1;min-width:0;font-size:13.5px;color:var(--dim);line-height:1.7}
+.row .sp{flex:none;width:380px;min-width:0}
+
+/* ---- 가이드 전용 : 견본 무대 ---- */
+.item{border-bottom:1px solid var(--hair);padding:0 0 26px;margin:0 0 22px}
+.item:last-child{border-bottom:0;margin-bottom:0}
+.item h3{margin:0 0 4px;font-size:14px;font-weight:800;letter-spacing:.01em}
+.item p{margin:0 0 16px;font-size:12.5px;color:var(--dim)}
+.two{display:grid;grid-template-columns:var(--g) var(--g);gap:26px}
+.two h4{margin:0 0 14px;font-size:14px;font-weight:800;letter-spacing:.02em}
+.two>div{border-top:2px solid #000;padding-top:12px}
+.two .cap{margin:14px 0 0;font-size:12.5px;color:var(--dim)}
+
+/* ---- 아래는 전부 index.html 원본 ---- */
+.facts{display:grid;grid-template-columns:repeat(4,var(--g));
+ border-top:1px solid #000;border-bottom:1px solid #000}
+.fact{padding:26px 26px 30px;border-right:1px solid var(--hair);min-width:0}
+.fact:first-child{padding-left:0}
+.fact:last-child{border-right:0;padding-right:0}
+.fact dt{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);line-height:1.3}
+.fact dd{margin:13px 0 0;font-size:clamp(22px,3.4vw,34px);font-weight:700;letter-spacing:-.035em;line-height:1}
+.fact dd s{text-decoration:none;font-size:.42em;font-weight:500;letter-spacing:0;margin-left:.3em;color:var(--dim)}
+.fact dd mark{background:var(--acc);color:#000;padding:0 .12em}
+.prog{height:4px;background:var(--hair)}
+.prog i{display:block;height:4px;background:var(--acc)}
+
+.tabs{display:flex;align-items:flex-end;gap:0;border-bottom:2px solid #000}
+.tabs [role=tab]{appearance:none;background:none;border:0;border-bottom:4px solid transparent;
+ margin-bottom:-3px;font:inherit;font-weight:700;font-size:15px;letter-spacing:-.01em;
+ padding:10px 18px 9px;cursor:pointer;color:var(--dim)}
+.tabs [role=tab]:first-child{padding-left:0}
+.tabs [role=tab][aria-selected="true"]{color:#000;border-bottom-color:var(--acc)}
+
+.vt{display:flex;border:1px solid #000;width:max-content}
+.vt button{appearance:none;background:none;border:0;font:inherit;font-weight:700;font-size:12px;
+ letter-spacing:.02em;padding:7px 16px;cursor:pointer;color:var(--dim)}
+.vt button+button{border-left:1px solid #000}
+.vt button[aria-pressed="true"]{background:var(--acc);color:#000}
+
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);
+ font-weight:700;text-align:left;padding:0 0 8px 14px;border-bottom:1px solid #000}
+th:first-child{padding-left:0}
+td{padding:11px 0 11px 14px;border-bottom:1px solid var(--hair);font-size:16px;letter-spacing:-.02em}
+td:first-child{padding-left:0;font-weight:800;font-size:14px;letter-spacing:0}
+td small{display:block;font-size:11.5px;color:var(--dim);letter-spacing:0;margin-top:2px}
+
+.note{border-left:3px solid var(--acc);padding:2px 0 2px 16px;margin:0;
+ font-size:13.5px;color:#333;max-width:74ch}
+.note b{font-weight:700;color:#000}
+.note.warn{border-left-color:#000}
+
+ul.rules{margin:0;padding:12px 16px;list-style:none;
+ border:1px solid var(--hair);background:#fafafa;
+ color:var(--dim);font-size:12.5px;line-height:1.7}
+ul.rules li{position:relative;padding-left:13px;margin-bottom:5px}
+ul.rules li:last-child{margin-bottom:0}
+ul.rules li::before{content:"";position:absolute;left:0;top:.62em;width:3px;height:3px;background:#b6b6b6}
+
+.pick{display:flex;align-items:baseline;gap:12px;width:100%;text-align:left;
+ appearance:none;background:none;border:0;border-bottom:1px solid var(--hair);
+ padding:14px 6px;font:inherit;cursor:pointer}
+.pick:last-child{border-bottom:1px solid #000}
+.pick b{font-size:16px;font-weight:800;min-width:46px;letter-spacing:-.02em}
+.pick span{font-size:12.5px;color:var(--dim)}
+.pick em{font-style:normal;margin-left:auto;font-size:12.5px;color:var(--dim);white-space:nowrap}
+.pick[aria-pressed="true"]{background:var(--acc)}
+.pick[aria-pressed="true"] span,.pick[aria-pressed="true"] em{color:#000}
+
+.blk h3.demo{margin:0;font-size:13px;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
+.blk h3.demo b{background:var(--acc);padding:2px 7px;font-weight:800}
+.blk h3.demo span{font-weight:500;letter-spacing:0;text-transform:none;color:var(--dim);margin-left:8px;font-size:12.5px}
+
+.cal{width:100%;border-collapse:collapse;table-layout:fixed}
+.cal td{border:1px solid var(--hair);vertical-align:top;padding:8px 8px 10px;font-size:15px}
+.cal b{font-size:11.5px;font-weight:600;color:var(--dim);font-variant-numeric:tabular-nums;display:block}
+.cal td.on b{background:#000;color:#fff;padding:1px 5px;font-weight:700;display:inline-block}
+.cal td.past{background:#fafafa}
+.cal td.taper{background:#eef4ec}
+.cal i{display:block;margin-top:5px;font-style:normal;font-size:9.5px;font-weight:700;padding:2px 5px}
+.cal i u{text-decoration:none;font-weight:800;margin-right:5px}
+.cal i.t{background:var(--acc);color:#000}
+.cal i.l{background:var(--acc-soft);color:#000}
+.cal i.r{background:#000;color:#fff;font-weight:600}
+
+.bad{border-radius:17px;height:34px;width:190px;
+ background:linear-gradient(90deg,#ffc800,#ff6b00)}
+.badtx{font-size:26px;font-weight:800;letter-spacing:-.035em;color:var(--acc)}
+.hl{background:var(--acc);padding:2px 7px;font-size:26px;font-weight:800;letter-spacing:-.035em}
+.hls{background:var(--acc-soft);padding:4px 7px;font-size:15px;font-weight:700}
+
+/* ---- 푸터 ---- */
+footer{margin:70px 0 0;padding:14px 0 0;border-top:2px solid #000;
+ display:flex;justify-content:space-between;gap:20px;
+ font-size:12px;letter-spacing:.06em;color:var(--dim)}
+footer b{color:#000;font-weight:800}
+
+@media (max-width:760px){
+  .wrap{padding:0 18px 72px}
+  .row{flex-wrap:wrap;gap:10px 16px}
+  .row .k{width:96px}
+  .row .u,.row .d{flex:1 0 100%}
+  .row .ln,.row .sp{width:100%}
+  .row .t{width:auto}
+  .two{grid-template-columns:1fr;gap:34px}
+  .facts{grid-template-columns:repeat(2,var(--g))}
+  .fact{padding:18px 16px 22px}
+  .fact:nth-child(2n){border-right:0;padding-right:0}
+  .fact:nth-child(2n+1){padding-left:0}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="mast">
+  <div class="eyebrow"><span><b>[G･LAB]</b> GSRC 구파발천 러닝크루 훈련팀</span><span class="r">디자인 가이드</span></div>
+  <h1><em>G&#xFF65;LAB</em></h1>
+  <p class="sub">신문 조판. 상자가 아니라 선으로 구조를 만든다.<br>반경 0, 그림자 0. 색은 흑백에 노란 형광펜 하나뿐이다.</p>
+</header>
+
+<!-- 01 색 -->
+<section>
+  <div class="shead"><h2>색</h2><span>01</span></div>
+  <p class="lede">흑백이 기본이다. 노랑은 검정 글자 뒤에 까는 형광펜으로만 쓴다. 글자색으로는 절대 쓰지 않는다.</p>
+  <div class="rows">
+    <div class="row"><i class="sw" style="background:#000"></i><span class="k">ink</span><span class="v">#000000</span><span class="u">글자, 굵은 선, 강조 배경</span></div>
+    <div class="row"><i class="sw" style="background:#fff"></i><span class="k">paper</span><span class="v">#FFFFFF</span><span class="u">바탕</span></div>
+    <div class="row"><i class="sw" style="background:#767676"></i><span class="k">dim</span><span class="v">#767676</span><span class="u">보조 설명, 라벨</span></div>
+    <div class="row"><i class="sw" style="background:#dcdcdc"></i><span class="k">hair</span><span class="v">#DCDCDC</span><span class="u">표 행 구분선</span></div>
+    <div class="row"><i class="sw" style="background:#93979b"></i><span class="k">line</span><span class="v">#93979B</span><span class="u">표 안 중간 톤 구분선</span></div>
+    <div class="row"><i class="sw" style="background:#ffc800"></i><span class="k">acc</span><span class="v">#FFC800</span><span class="u">형광펜. 검정 글자와 13.5 : 1</span></div>
+    <div class="row"><i class="sw" style="background:#ffeaa8"></i><span class="k">acc-soft</span><span class="v">#FFEAA8</span><span class="u">같은 노랑 37% 농도. 일요일 장거리</span></div>
+    <div class="row"><i class="sw" style="background:#fafafa"></i><span class="k">well</span><span class="v">#FAFAFA</span><span class="u">보조 목록 바탕, 지나간 주차</span></div>
+    <div class="row"><i class="sw" style="background:#eef4ec"></i><span class="k">taper</span><span class="v">#EEF4EC</span><span class="u">테이퍼링 주차 표시</span></div>
+  </div>
+</section>
+
+<!-- 02 타이포 -->
+<section>
+  <div class="shead"><h2>타이포</h2><span>02</span></div>
+  <p class="lede">글꼴은 둘뿐이다. 워드마크만 LINE Seed JP 700, 나머지는 전부 Pretendard Variable. 숫자는 항상 <code>tnum</code> 고정폭으로 세로줄이 맞는다.</p>
+  <div class="rows">
+    <div class="row"><span class="k">워드마크</span><span class="sp" style="font-family:'LINE Seed JP',Pretendard,sans-serif;font-weight:700;font-size:56px;line-height:.86;letter-spacing:-.03em">G･LAB</span><span class="u">clamp(48, 10vw, 120) / 자간 -.03em / 행간 .86</span></div>
+    <div class="row"><span class="k">주차 숫자</span><span class="sp" style="font-size:40px;font-weight:800;letter-spacing:-.035em;line-height:1">12주차</span><span class="u">clamp(26, 4vw, 40) / w800</span></div>
+    <div class="row"><span class="k">요약 수치</span><span class="sp" style="font-size:34px;font-weight:700;letter-spacing:-.035em;line-height:1">4:30</span><span class="u">clamp(22, 3.4vw, 34) / w700</span></div>
+    <div class="row"><span class="k">조 이름</span><span class="sp" style="font-size:22px;font-weight:800;letter-spacing:-.025em">3조</span><span class="u">22px 고정 / w800</span></div>
+    <div class="row"><span class="k">블록 제목</span><span class="sp" style="font-size:13px;font-weight:800;letter-spacing:.04em;text-transform:uppercase">목요일 트랙</span><span class="u">13px / 자간 .04em / 대문자</span></div>
+    <div class="row"><span class="k">본문</span><span class="sp" style="font-size:15px">회복은 질주보다 10초 느리게</span><span class="u">15px / 행간 1.5</span></div>
+    <div class="row"><span class="k">라벨</span><span class="sp" style="font-size:10.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)">TOTAL DISTANCE</span><span class="u">10.5px / 자간 .14em / dim</span></div>
+    <div class="row"><span class="k">표 머리</span><span class="sp" style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)">LAP&nbsp;&nbsp;&nbsp;PACE</span><span class="u">10px / 자간 .1em / dim</span></div>
+  </div>
+</section>
+
+<!-- 03 선 -->
+<section>
+  <div class="shead"><h2>선</h2><span>03</span></div>
+  <p class="lede">상자를 쓰지 않는다. 위계는 선의 굵기와 색으로만 만든다. 세 단계를 넘기지 않는다.</p>
+  <div class="rows">
+    <div class="row"><span class="k">2px 검정</span><span class="ln"><i style="height:2px;background:#000"></i></span><span class="u">최상위 구분. 마스트헤드 아래, 탭 아래, 푸터 위</span></div>
+    <div class="row"><span class="k">1px 검정</span><span class="ln"><i style="height:1px;background:#000"></i></span><span class="u">섹션 제목 아래, 표 머리 아래, 표의 마지막 행</span></div>
+    <div class="row"><span class="k">1px hair</span><span class="ln"><i style="height:1px;background:var(--hair)"></i></span><span class="u">표 행 사이. 가장 약한 구분</span></div>
+    <div class="row"><span class="k">4px 노랑</span><span class="ln"><i style="height:4px;background:var(--acc)"></i></span><span class="u">선택된 탭 아래 표시. 이때만 노랑이 선이 된다</span></div>
+  </div>
+</section>
+
+<!-- 04 노랑 -->
+<section>
+  <div class="shead"><h2>노랑 쓰는 법</h2><span>04</span></div>
+  <p class="lede">노랑은 형광펜이다. 검정 글자 뒤에 까는 것만 허용한다. 글자색으로 쓰면 흰 바탕에서 1.5 : 1 밖에 안 나와 읽히지 않는다.</p>
+  <div class="two">
+    <div>
+      <h4>O&nbsp;&nbsp;이렇게</h4>
+      <p style="margin:0 0 14px"><span class="hl">12주차</span></p>
+      <p style="margin:0 0 14px"><span class="hls">일요일 장거리</span></p>
+      <p class="cap">검정 글자 뒤 배경으로만. 명도차 13.5 : 1. 옅은 쪽(acc-soft)은 같은 색을 37%로 묽힌 것이지 다른 노랑이 아니다.</p>
+    </div>
+    <div>
+      <h4>X&nbsp;&nbsp;이렇게 하지 마라</h4>
+      <p style="margin:0 0 14px"><span class="badtx">12주차</span></p>
+      <p style="margin:0 0 14px"><span class="bad" style="display:block"></span></p>
+      <p class="cap">노랑 글자, 그라디언트, 둥근 모서리. 셋 다 금지다.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 05 컴포넌트 -->
+<section>
+  <div class="shead"><h2>컴포넌트</h2><span>05</span></div>
+  <p class="lede">전부 선과 여백으로만 만들어졌다. 아래 견본은 사이트와 같은 CSS 로 그려진다.</p>
+
+  <div class="item">
+    <h3>밑줄 탭</h3>
+    <p>최상위 전환. 선택된 쪽만 검정 글자에 4px 노란 밑줄이 붙는다.</p>
+    <div class="tabs">
+      <button role="tab" aria-selected="true">이번주 훈련</button>
+      <button role="tab" aria-selected="false">전체 일정</button>
+    </div>
+  </div>
+
+  <div class="item">
+    <h3>뷰 토글</h3>
+    <p>탭 아래 층위의 보조 전환. 1px 검정 테두리로 묶고 선택된 칸만 노랑으로 채운다.</p>
+    <div class="vt">
+      <button aria-pressed="true">달력</button>
+      <button aria-pressed="false">주차별</button>
+    </div>
+  </div>
+
+  <div class="item">
+    <h3>요약 수치</h3>
+    <p>위아래 1px 검정 사이에 4칸. 라벨은 작게 위, 값은 크게 아래. 진행 막대는 4px 트랙이다.</p>
+    <dl class="facts" style="margin:0">
+      <div class="fact"><dt>Week</dt><dd>12<s>/ 19</s></dd></div>
+      <div class="fact"><dt>Session</dt><dd>파틀렉</dd></div>
+      <div class="fact"><dt>Target</dt><dd><mark>D-49</mark></dd></div>
+      <div class="fact"><dt>Groups</dt><dd>8<s>개 조</s></dd></div>
+    </dl>
+    <div class="prog" style="margin-top:0"><i style="width:63%"></i></div>
+  </div>
+
+  <div class="item">
+    <h3>표</h3>
+    <p>머리는 1px 검정, 행은 1px hair. 첫 열은 굵게 작게, 값은 크게. 초가 위, 페이스가 아래다.</p>
+    <table>
+      <thead><tr><th>조</th><th>질주</th><th>회복</th><th>목표</th></tr></thead>
+      <tbody>
+        <tr><td>3조</td><td>108<small>4'30"/km</small></td><td>118<small>4'55"/km</small></td><td>3:30</td></tr>
+        <tr><td>4조</td><td>112<small>4'40"/km</small></td><td>122<small>5'05"/km</small></td><td>3:35</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="item">
+    <h3>블록 제목</h3>
+    <p>요일은 노랑으로 칠하고, 뒤따르는 설명은 dim 으로 눌러 한 덩어리로 읽히게 한다.</p>
+    <div class="blk"><h3 class="demo"><b>목요일</b> 트랙 인터벌 <span>사다리형 4321234321</span></h3></div>
+  </div>
+
+  <div class="item">
+    <h3>주석</h3>
+    <p>왼쪽 3px 세로선 하나. 노랑이 기본이고, 주의를 줄 때만 검정으로 바꾼다.</p>
+    <p class="note" style="margin-bottom:14px"><b>회복</b>은 질주보다 10초 느리게 잡는다.</p>
+    <p class="note warn"><b>주의</b> 이 조의 장거리 처방은 아직 자료가 없다.</p>
+  </div>
+
+  <div class="item">
+    <h3>보조 목록</h3>
+    <p>본문과 섞이지 않게 옅은 지면 위에 올린다. 불릿은 기본 마커 대신 3px 사각 점이다.</p>
+    <ul class="rules">
+      <li>워밍업 2km 후 드릴, 스트라이드 4회</li>
+      <li>회복 구간에서 완전히 멈추지 않는다</li>
+      <li>애매하면 아래 조에서 시작해 올라오기</li>
+    </ul>
+  </div>
+
+  <div class="item">
+    <h3>조 선택</h3>
+    <p>행 전체가 버튼이다. 선택된 행만 노랑으로 채우고, 마지막 행 아래는 1px 검정으로 닫는다.</p>
+    <div>
+      <button class="pick" aria-pressed="false"><b>2조</b><span>10km 42분</span><em>싱글</em></button>
+      <button class="pick" aria-pressed="true"><b>3조</b><span>10km 44분</span><em>3:30</em></button>
+      <button class="pick" aria-pressed="false"><b>4조</b><span>10km 46분</span><em>3:30~3:40</em></button>
+    </div>
+  </div>
+
+  <div class="item">
+    <h3>달력 마커</h3>
+    <p>주차 배지는 dim, 오늘이 든 칸만 검정 반전. 훈련은 노랑, 장거리는 옅은 노랑, 대회는 검정이다.</p>
+    <table class="cal">
+      <tr>
+        <td class="past"><b>9/6</b><i class="t"><u>10W</u> 인터벌</i></td>
+        <td class="on"><b>9/13</b><i class="l"><u>11W</u> 장거리</i></td>
+        <td class="taper"><b>9/20</b><i class="t"><u>12W</u> 파틀렉</i></td>
+        <td><b>9/27</b><i class="r"><u>13W</u> JTBC</i></td>
+      </tr>
+    </table>
+  </div>
+</section>
+
+<!-- 06 간격 -->
+<section>
+  <div class="shead"><h2>간격</h2><span>06</span></div>
+  <p class="lede">표 안은 좁게, 섹션 사이는 크게 벌린다. 신문 지면처럼 덩어리가 먼저 나뉘고 그 안에서 줄이 읽히게 한다.</p>
+  <div class="rows">
+    <div class="row"><span class="k">4</span><span class="bar"><i style="width:4px"></i></span><span class="u">같은 값끼리. 초와 페이스 사이</span></div>
+    <div class="row"><span class="k">8</span><span class="bar"><i style="width:8px"></i></span><span class="u">제목과 바로 아래 줄, 표 머리 아래</span></div>
+    <div class="row"><span class="k">14</span><span class="bar"><i style="width:14px"></i></span><span class="u">블록 안 요소 사이, 주석 왼쪽 여백</span></div>
+    <div class="row"><span class="k">22</span><span class="bar"><i style="width:22px"></i></span><span class="u">섹션 제목과 본문 사이</span></div>
+    <div class="row"><span class="k">34</span><span class="bar"><i style="width:34px"></i></span><span class="u">블록과 블록 사이 (목요일 / 일요일)</span></div>
+    <div class="row"><span class="k">58</span><span class="bar"><i style="width:58px"></i></span><span class="u">섹션과 섹션 사이</span></div>
+    <div class="row"><span class="k">28</span><span class="bar"><i style="width:28px"></i></span><span class="u">화면 좌우 여백. 모바일은 18</span></div>
+  </div>
+</section>
+
+<!-- 07 규칙 -->
+<section>
+  <div class="shead"><h2>지켜야 할 것</h2><span>07</span></div>
+  <div class="rows">
+    <div class="row"><span class="n">01</span><span class="t">상자 대신 선</span><span class="d">카드도 그림자도 쓰지 않는다. 구역을 나눌 때는 위아래로 선을 긋는다.</span></div>
+    <div class="row"><span class="n">02</span><span class="t">반경 0</span><span class="d">모서리는 전부 각지게 둔다. 둥근 요소는 이 사이트에 하나도 없다.</span></div>
+    <div class="row"><span class="n">03</span><span class="t">움직임 최소</span><span class="d">전환은 색 바뀜 정도로 끝낸다. 등장 애니메이션도, 무한 반복도 없다. 예외는 바텀시트가 올라오는 것 하나뿐이다.</span></div>
+    <div class="row"><span class="n">04</span><span class="t">노랑은 배경으로만</span><span class="d">글자색으로 쓰지 않는다. 그라디언트로도 쓰지 않는다. 선으로 쓰는 곳은 선택된 탭 밑줄 하나다.</span></div>
+    <div class="row"><span class="n">05</span><span class="t">숫자가 주인공</span><span class="d">초를 크게 위에, 페이스를 작게 아래에. 크루원은 페이스보다 초를 본다.</span></div>
+    <div class="row"><span class="n">06</span><span class="t">표는 가로로 스크롤</span><span class="d">좁은 화면이라고 세로로 접지 않는다. 대신 표 머리와 첫 열을 고정한다.</span></div>
+    <div class="row"><span class="n">07</span><span class="t">글꼴은 둘</span><span class="d">워드마크는 LINE Seed JP, 나머지는 Pretendard. 셋째는 없다.</span></div>
+  </div>
+</section>
+
+<footer>
+  <span><b>[G-LAB]</b> GSRC 구파발천 러닝크루 훈련팀</span>
+  <span>2026 하반기</span>
+</footer>
+
+</div>
+</body>
+</html>

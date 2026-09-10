@@ -1,0 +1,3 @@
+# G-LAB 훈련표는 크루 내부용이다. 검색엔진에 색인하지 않는다.
+User-agent: *
+Disallow: /

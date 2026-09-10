@@ -1,0 +1,1432 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>G-LAB 훈련표 / GSRC 구파발 러닝랩</title>
+<meta name="description" content="GSRC 훈련팀 G-LAB(구파발 러닝랩) 조별 훈련표. 주차별 인터벌 처방과 조별 기준 페이스.">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+<meta property="og:type" content="website">
+<meta property="og:title" content="G-LAB 훈련표">
+<meta property="og:description" content="GSRC 훈련팀 G-LAB. 주차별 조별 훈련표.">
+<meta property="og:image" content="https://studio-noe.github.io/g-lab/og.png">
+<meta property="og:url" content="https://studio-noe.github.io/g-lab/">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="icon-32.png" sizes="32x32">
+<link rel="icon" href="icon-512.png" sizes="512x512">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=LINE+Seed+JP:wght@700&amp;display=swap">
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" defer></script>
+<style>
+/* ---------------------------------------------------------------------------
+   신문 조판. 상자가 아니라 선으로 구조를 만든다. DESIGN.md 참조.
+   선 3단계 : 2px 검정(최상위) / 1px 검정(섹션, 표머리) / 1px hair(행)
+   앰버는 절대 글자색이 아니다. 검은 글자 뒤에 깔리는 채움으로만 쓴다.
+   반경 0, 그림자 0, 모션 0.
+--------------------------------------------------------------------------- */
+:root{
+  --ink:#000; --paper:#fff; --dim:#767676; --hair:#dcdcdc;
+  --acc:#ffc800;            /* 형광펜. 검정 글자와 13.5:1 */
+  --acc-soft:#ffeaa8;       /* 같은 노랑 37% 농도. 일요일 장거리용 */
+  --g:minmax(0,1fr);
+}
+*{box-sizing:border-box}
+/* iOS 는 color 를 지정하지 않은 버튼 글자를 파랗게 칠한다 */
+button{color:inherit}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);
+ font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Helvetica Neue",Arial,sans-serif;
+ font-size:15px;line-height:1.5;font-feature-settings:"tnum" 1;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1240px;margin:0 auto;padding:0 28px 96px}
+a{color:inherit}
+:focus-visible{outline:2px solid #000;outline-offset:2px}
+
+/* ---- 마스트헤드 ---- */
+.mast{padding:40px 0 0}
+.eyebrow{display:grid;grid-template-columns:1fr auto;align-items:center;gap:14px;
+ font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+ padding-bottom:10px;border-bottom:2px solid #000}
+.eyebrow b{color:#000;font-weight:800;letter-spacing:.06em}
+.eyebrow .r{justify-self:end;text-transform:none;letter-spacing:.02em;color:var(--dim);white-space:nowrap}
+h1{margin:0;font-weight:700;
+ font-family:"LINE Seed JP","Pretendard Variable",Pretendard,-apple-system,sans-serif;
+ font-size:clamp(48px,10vw,120px);line-height:.86;letter-spacing:-.03em}
+.mast-hd{display:flex;align-items:flex-start;gap:14px;margin:22px 0 0}
+.chat{flex:none;margin-left:auto;display:inline-flex;align-items:center;color:inherit;text-decoration:none;
+ font-size:14px;font-weight:700;letter-spacing:-.01em;white-space:nowrap;padding-top:4px}
+.chat:hover{background:var(--acc)}
+.chat svg{width:20px;height:20px;display:block;flex:none}
+h1 em{font-style:normal;background:var(--acc);padding:0 .06em}
+.gate h1 em{background:none;padding:0}
+.sub{margin:16px 0 0;font-size:clamp(15px,2vw,19px);font-weight:500;letter-spacing:-.01em;max-width:56ch}
+
+/* ---- 요약 수치 ---- */
+.facts{display:grid;grid-template-columns:repeat(4,var(--g));margin:34px 0 0;
+ border-top:1px solid #000;border-bottom:1px solid #000}
+.fact{padding:26px 26px 30px;border-right:1px solid var(--hair);min-width:0}
+.fact:first-child{padding-left:0}
+.fact:last-child{border-right:0;padding-right:0}
+.fact dt{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);line-height:1.3}
+.fact dd{margin:13px 0 0;font-size:clamp(22px,3.4vw,34px);font-weight:700;letter-spacing:-.035em;line-height:1}
+.fact dd s{text-decoration:none;font-size:.42em;font-weight:500;letter-spacing:0;margin-left:.3em;color:var(--dim)}
+.fact dd mark{background:var(--acc);color:#000;padding:0 .12em}
+/* 시즌 진행. 참조 사이트의 .dens 막대와 같은 4px 트랙이다. */
+.prog{height:4px}
+.prog i{display:block;height:4px;background:var(--acc)}
+
+/* ---- 섹션 ---- */
+section{margin:58px 0 0}
+.shead{display:flex;gap:14px;align-items:baseline;border-bottom:1px solid #000;
+ padding-bottom:8px;margin-bottom:20px;min-height:34px}
+.shead h2{margin:0;font-size:17px;font-weight:700;letter-spacing:-.01em}
+.shead span{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin-left:auto;
+ white-space:nowrap}
+.lede{margin:-8px 0 18px;font-size:13px;color:var(--dim);max-width:74ch}
+
+/* 최상위 탭. 하위 컨트롤(.vt)과 다른 층위로 보이게 밑줄형을 쓴다. */
+.tabs{display:flex;align-items:flex-end;gap:0;margin:34px 0 20px;border-bottom:2px solid #000}
+.tabs [role=tab]{appearance:none;background:none;border:0;border-bottom:4px solid transparent;
+ margin-bottom:-3px;font:inherit;font-weight:700;font-size:15px;letter-spacing:-.01em;
+ padding:10px 18px 9px;cursor:pointer;color:var(--dim)}
+.tabs [role=tab]:first-child{padding-left:0}
+.tabs [role=tab][aria-selected="true"]{color:#000;border-bottom-color:var(--acc)}
+[data-tab][hidden]{display:none}
+.tabctl{margin:0 0 8px auto;align-self:flex-end}
+.vt.mini{margin:0}
+.vt.mini[hidden]{display:none}
+.vt.mini button{padding:6px 13px;font-size:12px}
+.vt.mini button b{font-weight:800;margin-left:6px}
+.vt.mini button i{font-style:normal;margin-left:5px;font-size:10px;color:inherit}
+.pick{display:flex;align-items:baseline;gap:12px;width:100%;text-align:left;
+ appearance:none;background:none;border:0;border-bottom:1px solid var(--hair);
+ padding:14px 6px;font:inherit;cursor:pointer}
+.pick:last-child{border-bottom:1px solid #000}
+.pick b{font-size:16px;font-weight:800;min-width:46px;letter-spacing:-.02em}
+.pick span{font-size:12.5px;color:var(--dim)}
+.pick em{font-style:normal;margin-left:auto;font-size:12.5px;color:var(--dim);white-space:nowrap}
+.pick[aria-pressed="true"]{background:var(--acc)}
+.pick[aria-pressed="true"] span,.pick[aria-pressed="true"] em{color:#000}
+.chk{display:flex;align-items:center;gap:12px;padding:15px 6px;cursor:pointer;
+ border-bottom:1px solid var(--hair)}
+.chk input{width:18px;height:18px;margin:0;accent-color:var(--acc);flex:none}
+.chk b{font-size:15px;font-weight:800;min-width:58px;letter-spacing:-.02em}
+.chk span{font-size:12.5px;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chk:has(input:disabled){opacity:.45;cursor:default}
+#shotgo{display:flex;width:max-content;margin-left:auto}
+
+/* 내 조 카드. 표를 눕히지 않고 세워서 가로 스크롤을 없앤다. */
+.mine-hd{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:0 0 2px}
+.mine-hd h4{margin:0;font-size:22px;font-weight:800;letter-spacing:-.03em}
+.mine-hd span{font-size:12px;color:var(--dim)}
+.facts.three{grid-template-columns:repeat(3,var(--g));margin-top:7px}
+.facts.three .fact{padding:15px 14px 17px}
+.facts.three .fact:first-child{padding-left:0}
+.facts.three .fact:last-child{padding-right:0}
+.facts.three .fact dd{margin-top:10px;font-size:clamp(20px,3vw,30px)}
+.facts.three .fact dt{font-size:10px;letter-spacing:.12em}
+.allview{display:inline-block;margin-top:14px;font-size:12px;font-weight:600;
+ text-decoration:none;border-bottom:2px solid var(--acc);padding-bottom:2px;cursor:pointer}
+.allview:hover{background:var(--acc)}
+tr.on td{background:var(--acc-soft)}
+.scroller tr.on td:first-child{background:var(--acc-soft)}
+
+/* ---- 표 ---- */
+.scroller{overflow-x:auto;-webkit-overflow-scrolling:touch}
+/* 스크롤바도 조판에 맞춘다. 얇은 실선, 둥근 모서리 없음. */
+.scroller,.sheet{scrollbar-width:thin;scrollbar-color:var(--hair) transparent}
+.scroller::-webkit-scrollbar,.sheet::-webkit-scrollbar{width:5px;height:5px}
+.scroller::-webkit-scrollbar-track,.sheet::-webkit-scrollbar-track{background:transparent}
+.scroller::-webkit-scrollbar-thumb,.sheet::-webkit-scrollbar-thumb{background:var(--hair);border-radius:0}
+.scroller:hover::-webkit-scrollbar-thumb,.sheet:hover::-webkit-scrollbar-thumb{background:#b4b4b4}
+.scroller::-webkit-scrollbar-corner,.sheet::-webkit-scrollbar-corner{background:transparent}
+table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:700px}
+th{text-align:right;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);
+ font-weight:600;padding:0 0 8px 14px;border-bottom:1px solid #000;white-space:nowrap;vertical-align:bottom}
+th:first-child{text-align:left;padding-left:0}
+td{padding:11px 0 11px 14px;border-bottom:1px solid var(--hair);white-space:nowrap;
+ text-align:right;font-variant-numeric:tabular-nums}
+td:first-child{padding-left:0;text-align:left;font-weight:800;letter-spacing:-.01em}
+td.pl{text-align:left;font-weight:500;color:var(--dim);white-space:normal}
+/* 시퀀스는 내용 폭만 쓴다. width:1% 면 남는 폭이 다른 열로 간다. */
+th.seq,td.seq{width:1%;text-align:left;white-space:nowrap;font-weight:500;
+ color:var(--dim);letter-spacing:.06em}
+td b{font-weight:700}
+td s{text-decoration:none;display:block;font-size:11px;color:var(--dim);font-weight:400;
+ letter-spacing:0;margin-top:2px}
+th s{text-decoration:none;display:block;font-size:9.5px;color:var(--dim);
+ font-weight:400;letter-spacing:.02em;margin-top:2px}
+/* 환산표는 행이 많다. 표준 표보다 촘촘하게. */
+/* 행이 많아 표 자체를 스크롤 상자로 만든다. 그래야 머리행이 붙는다. */
+.chartwrap .scroller{max-height:68vh;overflow:auto}
+/* 층: 모서리 > 머리행 > 좌측열 > 본문. 같은 값이면 뒤 요소가 위로 그려진다. */
+.chartwrap .scroller thead th{position:sticky;top:0;z-index:5;background:var(--paper)}
+.chartwrap .scroller thead th:first-child{z-index:6}
+.chartwrap .scroller tbody td:first-child{z-index:4}
+.chartwrap td{padding:7px 0 7px 14px}
+.chartwrap th{padding-bottom:6px}
+tbody tr:last-child td{border-bottom:1px solid #000}
+/* 가로 스크롤 시 조 열을 왼쪽에 고정한다. 달력 표(.cal)는 스크롤이 없어 해당 없음. */
+.scroller th:first-child,
+.scroller td:first-child{position:sticky;left:0;z-index:1;background:var(--paper);
+ padding-right:14px;border-right:1px solid var(--hair)}
+.scroller thead th:first-child{z-index:2}
+.scroller tbody tr:last-child td:first-child{border-right:1px solid var(--hair)}
+
+
+/* ---- 진행 사슬 ---- */
+ol.chain{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:4px 0;align-items:center}
+ol.chain li{font-size:13px;color:var(--dim)}
+ol.chain li span{display:inline-block;padding:5px 0}
+ol.chain li:not(:last-child)::after{content:"→";margin:0 10px;color:#c4c4c4}
+ol.chain li.on{color:#000}
+ol.chain li.on span{background:var(--acc);color:#000;font-weight:800;padding:5px 9px}
+ol.chain li b{font-weight:700;margin-right:3px}
+
+/* ---- 주석 ---- */
+.note{border-left:3px solid var(--acc);padding:2px 0 2px 16px;margin:14px 0 0;
+ font-size:13.5px;color:#333;max-width:74ch}
+.note b{font-weight:700;color:#000}
+.note.warn{border-left-color:#000}
+
+/* ---- 이번 주 ---- */
+.now{border-bottom:2px solid #000;padding:0 0 22px}
+.now .hd{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:4px}
+.now .wk{font-size:clamp(26px,4vw,40px);font-weight:800;letter-spacing:-.035em;line-height:1}
+.now .dt{font-size:14px;font-weight:600;color:var(--dim);font-variant-numeric:tabular-nums}
+.now .rc{font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-left:auto}
+.now .rc b{background:#000;color:#fff;padding:3px 8px;font-weight:700;letter-spacing:.06em}
+.shr{margin-left:auto;appearance:none;background:none;border:1px solid #000;padding:7px 9px;
+ line-height:0;cursor:pointer;color:#000;align-self:center}
+.shr:hover:not(:disabled){background:var(--acc)}
+.shr:disabled{color:#b6b6b6;border-color:var(--hair);cursor:default}
+.shr svg{width:15px;height:15px;display:block}
+.now .rc{margin-left:auto}
+.now .rc+.shr{margin-left:12px}
+
+/* 공유 이미지용 임시 지면. 화면 밖에서 자연 폭으로 펼쳐 렌더한다. */
+.shot{position:fixed;left:-20000px;top:0;background:var(--paper);padding:34px 32px 30px}
+.shot .scroller{overflow:visible;border:0}
+.shot .scroller th:first-child,
+.shot .scroller td:first-child{position:static}
+.shot table{min-width:0;width:max-content}
+.shot .allview,.shot .vt,.shot .shr{display:none}
+.shot ul.rules{display:block}
+/* 뷰포트 기준 clamp 는 캡처 지면에서 의미가 없다. 기기와 무관하게 고정한다. */
+.shot .now .wk{font-size:34px}
+.shot .fact dd{font-size:27px}
+.shot .facts.three .fact dd{font-size:25px}
+.shot .facts.three{margin-top:7px}
+.shot .mine-hd h4{font-size:23px}
+.shot .now .hd{margin-bottom:2px}
+.shot-top b{color:#000;font-weight:800;letter-spacing:.06em}
+.shot-top{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);
+ padding-bottom:9px;border-bottom:2px solid #000;margin-bottom:18px}
+.shot-bot{margin-top:22px;padding-top:11px;border-top:1px solid #000;
+ font-size:12px;color:var(--dim);display:flex;justify-content:space-between;gap:20px}
+.blk{margin-top:12px}
+.blk~.blk{margin-top:34px}
+.blk h3{margin:0 0 8px;font-size:13px;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
+.blk h3 b{background:var(--acc);padding:2px 7px;font-weight:800}
+.blk h3 span{font-weight:500;letter-spacing:0;text-transform:none;color:var(--dim);margin-left:8px;font-size:12.5px}
+.long{font-size:14px;font-weight:500}
+/* 부가 설명 목록. 본문과 섞이지 않게 옅은 지면 위에 올린다.
+   불릿은 기본 마커 대신 사각 점으로 그린다. 다단으로 나눠도 마커가 잘리지 않는다. */
+ul.rules{margin:0 0 14px;padding:12px 16px;list-style:none;
+ border:1px solid var(--hair);background:#fafafa;
+ color:var(--dim);font-size:12.5px;line-height:1.7}
+ul.rules li{position:relative;padding-left:13px;margin-bottom:5px}
+ul.rules li:last-child{margin-bottom:0}
+ul.rules li::before{content:"";position:absolute;left:0;top:.62em;
+ width:3px;height:3px;background:#b6b6b6}
+
+/* ---- 전체 일정 ---- */
+details{border-bottom:1px solid var(--hair)}
+details[open]{border-bottom:1px solid #000}
+summary{display:flex;gap:12px;align-items:baseline;padding:11px 0;cursor:pointer;
+ font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap}
+summary::-webkit-details-marker{display:none}
+summary::marker{content:""}
+summary b{flex:none;font-weight:800;letter-spacing:-.01em;font-size:14px;min-width:50px}
+summary .d{flex:none;color:var(--dim);min-width:102px}
+summary .t{flex:none;font-weight:600}
+summary .rc{flex:0 1 auto;min-width:0;margin-left:auto;text-align:right;
+ overflow:hidden;text-overflow:ellipsis;font-size:10.5px;letter-spacing:.1em;
+ text-transform:uppercase;color:var(--dim)}
+summary .x{flex:none;margin-left:auto;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase}
+summary .rc+.x{margin-left:0}
+summary .x i{font-style:normal;background:var(--acc);color:#000;padding:2px 7px;font-weight:700;letter-spacing:.06em}
+summary .x u{text-decoration:none;border:1px solid var(--dim);padding:1px 6px;color:var(--dim)}
+.more{display:block;width:100%;appearance:none;background:none;border:0;
+ border-bottom:1px solid var(--hair);padding:13px 6px;font:inherit;font-size:12.5px;
+ color:var(--dim);cursor:pointer;text-align:left}
+.more:hover{background:#fafafa}
+.more b{color:#000;font-weight:700;border-bottom:2px solid var(--acc);padding-bottom:1px}
+details.old[hidden]{display:none}
+details.done summary{color:var(--dim)}
+details.done summary b{font-weight:600}
+.rcline{margin:0 0 4px;font-size:12.5px;color:var(--dim)}
+.rcline b{background:#000;color:#fff;padding:2px 8px;font-weight:700;
+ font-size:10.5px;letter-spacing:.06em;margin-right:8px}
+details .body{padding:6px 0 26px}
+
+.chartwrap{border-bottom:1px solid var(--hair)}
+.chartwrap summary{font-weight:700;font-size:14px}
+.chartwrap summary::after{content:"펼치기";margin-left:auto;font-size:10.5px;font-weight:600;
+ letter-spacing:.1em;color:var(--dim)}
+.chartwrap[open] summary::after{content:"접기"}
+.chartwrap .body{padding:2px 0 22px}
+.credit{font-size:10.5px;color:var(--dim);padding:8px 0 0}
+tr.half td{border-top:1px solid var(--line)}
+tr.half td:first-child{font-weight:800}
+
+/* ---- 뷰 토글 ---- */
+.vt{display:flex;border:1px solid #000;width:max-content;margin:0 0 22px}
+.vt button{appearance:none;background:none;border:0;font:inherit;font-weight:700;font-size:12px;
+ letter-spacing:.02em;padding:7px 16px;cursor:pointer;color:var(--dim)}
+.vt button+button{border-left:1px solid #000}
+.vt button[aria-pressed="true"]{background:var(--acc);color:#000}
+[data-view][hidden]{display:none}
+
+/* ---- 달력 ---- */
+.mo{display:flex;align-items:center;justify-content:space-between;gap:8px;
+ border-bottom:1px solid #000;padding-bottom:8px}
+.mo h3{margin:0;font-size:15px;font-weight:800;letter-spacing:-.02em}
+.mo h3 span{margin-left:5px;font-size:12px;font-weight:500;letter-spacing:.02em;color:var(--dim)}
+/* 화살표 글자는 작게 두고, 패딩과 음수 마진으로 탭 영역만 크게 잡는다. */
+.mnav{appearance:none;background:none;border:0;font:inherit;font-size:13px;line-height:1;
+ color:var(--dim);cursor:pointer;padding:14px 16px;margin:-14px -16px}
+.mnav:hover:not(:disabled){color:#000}
+.mnav:disabled{color:#dcdcdc;cursor:default}
+table.cal{min-width:0;table-layout:fixed}
+table.cal th{text-align:center;padding:7px 0;font-size:9.5px;letter-spacing:.1em;border-bottom:1px solid var(--hair)}
+table.cal th:first-child{text-align:center;padding-left:0;color:#000}
+table.cal th:last-child{color:#000}
+table.cal td{text-align:left;vertical-align:top;padding:6px 6px 9px;height:62px;
+ border-bottom:1px solid var(--hair);border-right:1px solid var(--hair);white-space:normal}
+table.cal td:first-child{padding-left:6px;font-weight:400}
+table.cal td:last-child{border-right:0}
+table.cal tbody tr:last-child td{border-bottom:1px solid #000}
+.cal b{font-size:11.5px;font-weight:600;color:var(--dim);font-variant-numeric:tabular-nums}
+.cal td.on b{background:#000;color:#fff;padding:1px 5px;font-weight:700}
+.cal td.past{background:#fafafa}
+/* 테이퍼 구간. 노랑과 다투지 않게 채도를 낮춘 지면 톤이다. */
+.cal td.taper{background:#eef4ec}
+.cal td.taper.past{background:#eef1ec}
+.callegend em.tp{background:#eef4ec;border:1px solid #d3e0d0}
+.cal td.past b{color:#b4b4b4}
+.cal i{display:block;margin-top:5px;font-style:normal;font-size:9.5px;font-weight:700;
+ letter-spacing:-.01em;padding:2px 4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cal i u{text-decoration:none;font-weight:800;margin-right:5px}
+.cal i.t{background:var(--acc);color:#000}
+.cal i.l{background:var(--acc-soft);color:#000}
+.cal i.r{background:#000;color:#fff;font-weight:600}
+.cal td.past i.t{background:#f0dfae}
+.cal td.past i.l{background:#f4eeda;color:#8f8f8f}
+.callegend{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:11px;color:var(--dim);padding:12px 0 0}
+.callegend span{display:inline-flex;align-items:center;gap:6px}
+.callegend em{font-style:normal;width:16px;height:10px;display:inline-block}
+.callegend em.t{background:var(--acc)}
+.callegend em.l{background:var(--acc-soft)}
+.callegend em.r{background:#000}
+
+/* ---- 주차 상세 시트 ---- */
+[hidden]{display:none!important}
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.42);z-index:40;
+ opacity:0;visibility:hidden;transition:opacity .16s linear,visibility 0s linear .16s}
+.scrim.open{opacity:1;visibility:visible;transition:opacity .16s linear}
+.sheet{position:fixed;z-index:41;background:var(--paper);overflow-y:auto;
+ -webkit-overflow-scrolling:touch;top:0;right:0;bottom:0;width:min(640px,94vw);
+ border-left:2px solid #000;
+ visibility:hidden;transform:translateX(100%);
+ transition:transform .2s cubic-bezier(.2,.8,.2,1),visibility 0s linear .2s}
+.sheet.open{visibility:visible;transform:none;
+ transition:transform .2s cubic-bezier(.2,.8,.2,1)}
+.sheet-hd{position:sticky;top:0;z-index:5;background:var(--paper);display:flex;
+ align-items:baseline;gap:14px;padding:20px 24px 11px;border-bottom:1px solid #000}
+.sheet-hd h3{margin:0;font-size:19px;font-weight:800;letter-spacing:-.025em}
+.sheet-hd .wd{font-size:13px;color:var(--dim);font-variant-numeric:tabular-nums}
+.sheet-hd button{margin-left:auto;appearance:none;background:none;border:0;font:inherit;
+ font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#000;
+ cursor:pointer;border-bottom:2px solid var(--acc);padding:0 0 2px;align-self:center}
+.sheet-hd button:hover{background:var(--acc)}
+.sheet-bd{padding:18px 24px 64px}
+.sheet-bd .blk:first-child{margin-top:0}
+.daybtn{appearance:none;background:none;border:0;padding:0;margin:0;font:inherit;
+ display:block;width:100%;text-align:left;cursor:pointer}
+.daybtn:focus-visible{outline:2px solid #000;outline-offset:2px}
+@media (min-width:861px){
+  ul.rules{display:grid;grid-template-columns:1fr 1fr;column-gap:30px;row-gap:3px}
+  ul.rules li{margin-bottom:0}
+  /* 넓은 화면에서는 접힌 줄에 대회명이 이미 보인다 */
+  #weeks .rcline{display:none}
+}
+@media (max-width:860px){
+  .sheet{top:auto;left:0;right:0;bottom:0;width:auto;max-height:86vh;
+   border-left:0;border-top:2px solid #000;transform:translateY(100%)}
+  .sheet.open{transform:none}
+  .sheet-hd{padding:16px 18px 10px}
+  .sheet-bd{padding:16px 18px 44px}
+}
+
+/* ---- 오픈채팅 ---- */
+.info{font-size:13px}
+.info div{display:flex;gap:16px;align-items:baseline;padding:9px 0;border-bottom:1px solid var(--hair)}
+.info dt{flex:0 0 88px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);line-height:1.7}
+.info dd{margin:0;font-weight:500;letter-spacing:-.01em}
+.info dd b{font-weight:800;font-size:15px}
+a.go{display:inline-flex;align-items:center;gap:10px;margin-top:20px;font-size:15px;font-weight:700;
+ text-decoration:none;border-bottom:2px solid var(--acc);padding-bottom:3px}
+a.go svg{width:13px;height:13px;display:block;flex:none}
+a.go:hover{background:var(--acc)}
+
+footer{margin:72px 0 0;border-top:2px solid #000;padding-top:14px;font-size:11.5px;color:var(--dim);
+ display:flex;flex-wrap:wrap;gap:8px 28px;justify-content:space-between;align-items:center}
+.by{display:inline-flex;align-items:center;gap:6px;color:var(--dim);font-weight:700;
+ font-size:11.5px;text-decoration:none}
+.by:hover{color:#000}
+.by svg{width:14px;height:14px;display:block}
+
+@media (max-width:860px){
+  .wrap{padding:0 18px 64px}
+  .facts{grid-template-columns:repeat(2,var(--g))}
+  .facts.three{grid-template-columns:repeat(3,var(--g))}
+  .blk{margin-top:8px}
+  .blk~.blk{margin-top:22px}
+  .facts.three .fact{padding:14px 10px 16px;border-bottom:0}
+  .fact{padding:22px 22px 24px;border-bottom:1px solid var(--hair)}
+  .fact:nth-child(2n+1){padding-left:0}
+  .fact:nth-child(2n){border-right:0;padding-right:0}
+  .fact:nth-last-child(-n+2){border-bottom:0}
+  summary{gap:10px;padding:10px 0}
+  summary b{min-width:44px}
+  summary .d{min-width:94px}
+  summary .rc{display:none}
+  summary .x{margin-left:auto}
+}
+@media (max-width:600px){
+  table.cal td{height:52px;padding:5px 3px 7px}
+  .mnav{padding:15px 18px;margin:-15px -18px}
+  .cal i{padding:1px 2px;font-size:0;margin-top:4px;line-height:1.35}
+  .cal i u{font-size:8.5px;margin-right:0;letter-spacing:-.02em}
+  .cal i.r,.callegend .lg-r{display:none}
+}
+@media (max-width:430px){
+  .eyebrow{font-size:10px;letter-spacing:.12em}
+  .eyebrow .r{display:none}
+}
+@media print{
+  .wrap{max-width:none;padding:0}
+  .scroller th:first-child,.scroller td:first-child{position:static}
+  details[open],details{border-bottom:1px solid #999}
+  details .body{display:block!important}
+  details:not([open]) .body{display:none!important}
+  table{min-width:0;font-size:10px}
+  .scroller{overflow:visible}
+  a.go,.sheet,.scrim,.vt{display:none!important}
+}
+
+/* ---- 입장 게이트 ----
+   훈련 데이터는 암호문으로 내려온다. 코드를 넣어야 복호화되고 지면이 그려진다.
+   지면과 같은 조판이다. 상자 없이 선만 쓴다. */
+.gate{position:fixed;inset:0;z-index:90;background:#000;color:#fff;
+ display:flex;align-items:center;justify-content:center;padding:28px}
+/* 트랙 영상. 글씨가 읽혀야 하므로 검은 막을 한 겹 덮는다. */
+.gatevid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0}
+.gate::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.6);z-index:1}
+.gatebox{position:relative;z-index:2}
+@media (prefers-reduced-motion:reduce){ .gatevid{display:none} }
+.gate[hidden]{display:none}
+body.locked{overflow:hidden}
+body.locked .wrap,body.locked .sheet,body.locked .scrim{display:none}
+.gatebox{width:100%;max-width:420px}
+.gate .eyebrow{margin-bottom:22px;color:rgba(255,255,255,.62);border-bottom-color:#fff}
+.gate .eyebrow b{color:#fff}
+.gate .eyebrow .r{color:rgba(255,255,255,.62)}
+.gate h1{margin:0;white-space:nowrap;
+ /* 120px 이 목표다. 한 줄에 안 들어가는 폭에서는 접지 않고 줄인다.
+    3.46 은 이 서체에서 'G･LAB' 의 폭 / 글자크기 비율이다. 패딩 28px 양쪽을 뺀다. */
+ font-size:min(120px,calc((100vw - 56px) / 3.46))}
+.gate .msg{margin:18px 0 0;font-size:14px;color:rgba(255,255,255,.74);line-height:1.75}
+.gate form{display:flex;margin:26px 0 0;border-bottom:2px solid #fff}
+.gate input{flex:1;min-width:0;appearance:none;background:none;border:0;
+ font:inherit;font-size:19px;font-weight:700;letter-spacing:.1em;
+ padding:10px 2px;color:#fff}
+.gate input::placeholder{font-weight:500;letter-spacing:.02em;color:#c2c2c2}
+.gate input:focus{outline:0}
+.gate form:focus-within{border-bottom-color:var(--acc)}
+.gate button{flex:none;appearance:none;background:none;border:0;font:inherit;
+ font-size:13px;font-weight:800;letter-spacing:.04em;padding:10px 0 10px 16px;cursor:pointer;
+ transition:transform .18s ease}
+/* 노란 채움은 이 크기에서 너무 튄다. 오른쪽으로 살짝 밀리는 것으로만 반응한다. */
+.gate button:hover:not(:disabled){transform:translateX(4px)}
+.gate button:disabled{color:#b6b6b6;cursor:default;transform:none}
+@media (prefers-reduced-motion:reduce){
+  .gate button{transition:none}
+  .gate button:hover:not(:disabled){transform:none}
+}
+.gate .err{margin:12px 0 0;font-size:13px;font-weight:700;min-height:1.2em}
+.sess{display:flex;justify-content:flex-end;align-items:center;gap:8px;
+  padding:14px 0 0;font-size:11px;letter-spacing:.06em;color:var(--dim)}
+.sess[hidden]{display:none}
+.sess b{color:#000;font-weight:800;letter-spacing:.02em}
+.sess img{width:18px;height:18px;object-fit:cover;display:block;
+  border:1px solid var(--hair);border-radius:50%}
+.sess img[hidden]{display:none}
+.sess button{appearance:none;background:none;border:0;padding:0;font:inherit;
+  font-size:11px;letter-spacing:.06em;color:var(--dim);cursor:pointer;
+  text-decoration:underline;text-underline-offset:3px}
+.sess button:hover{color:#e00}
+.gate .err b{background:#fff;color:#000;padding:2px 7px;font-weight:700}
+.gate .kakao{display:flex;align-items:center;justify-content:center;gap:8px;
+  width:100%;margin:26px 0 0;padding:15px 0;background:#fee500;color:#000;
+  font:inherit;font-size:15px;font-weight:800;letter-spacing:-.01em;text-decoration:none}
+.gate .kakao svg{width:18px;height:18px}
+.gate .kakao:hover{background:#ffd900}
+.gate .foot{margin:34px 0 0;padding-top:12px;border-top:1px solid rgba(255,255,255,.22);text-align:right}
+.gate .foot .by{color:#fff;opacity:.5}
+.gate .foot .by:hover{opacity:1}
+
+/* ---- 페이스 계산기 ----
+   처방은 1레인 400m 기준인데 실제로는 바깥 레인에서 뛴다. 그 차이를 직접 넣어 본다.
+   레인 선택은 뷰 토글(.vt)을 그대로 쓴다. */
+.calc{border-top:1px solid #000;padding:18px 0 4px;margin:0 0 22px}
+.calcin{display:flex;flex-wrap:wrap;gap:16px 30px;align-items:flex-end}
+.calcin>div{display:flex;flex-direction:column;gap:7px}
+.calcin dt{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.calcin .f{display:flex;align-items:baseline;gap:6px;border-bottom:2px solid #000;width:max-content}
+.calcin .f:focus-within{border-bottom-color:var(--acc)}
+.calcin input{appearance:none;background:none;border:0;font:inherit;width:74px;text-align:right;
+ font-size:24px;font-weight:800;letter-spacing:-.02em;padding:2px 0;color:#000;
+ font-variant-numeric:tabular-nums}
+.calcin input:focus{outline:0}
+.calcin input::-webkit-outer-spin-button,
+.calcin input::-webkit-inner-spin-button{appearance:none;margin:0}
+.calcin .f s{text-decoration:none;font-size:12.5px;color:var(--dim)}
+.calc .vt{margin:0}
+.calc .vt button{padding:9px 12px;font-size:13px;font-weight:800}
+.calcout{margin:22px 0 0}
+.calcpace{margin:0 0 16px;display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
+.calcpace b{font-size:clamp(30px,6vw,44px);font-weight:800;letter-spacing:-.04em;line-height:1.05;
+ background:var(--acc);padding:0 8px}
+.calcpace span{font-size:13px;color:var(--dim)}
+.calcout .scroller+.scroller{margin-top:14px}
+.calcout td.me{background:var(--acc-soft);font-weight:800}
+.calcnote{margin:0;font-size:12.5px;color:var(--dim)}
+</style>
+</head>
+<body class="locked">
+<div class="gate" id="gate" hidden>
+  <video class="gatevid" src="gate.mp4" poster="gate.jpg"
+         autoplay muted loop playsinline preload="metadata" aria-hidden="true"></video>
+  <div class="gatebox">
+    <div class="eyebrow"><span><b>[G&#xFF65;LAB]</b> GSRC 구파발천 러닝크루 훈련팀</span><span class="r">2026 하반기</span></div>
+    <h1><em>G&#xFF65;LAB</em></h1>
+    <p class="msg" id="gatem">구파발 훈련팀 전용 훈련표입니다.<br>오픈채팅방에 올라온 입장코드 네 자리를 넣으세요.</p>
+    <div id="klogin" hidden>
+      <a class="kakao" id="kakaob" href="#">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M12 3C6.9 3 2.8 6.2 2.8 10.2c0 2.5 1.7 4.7 4.2 6L6 20.3c-.1.4.3.7.6.5l4.7-3.1c.2 0 .5.1.7.1
+                   5.1 0 9.2-3.2 9.2-7.6S17.1 3 12 3z"/>
+        </svg>카카오로 로그인
+      </a>
+    </div>
+    <form id="gatef" autocomplete="off">
+      <input id="gatei" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8"
+             autocapitalize="off" autocorrect="off" spellcheck="false"
+             placeholder="네 자리 숫자" aria-label="입장코드">
+      <button type="submit" id="gateb">들어가기</button>
+    </form>
+    <p class="err" id="gatee" role="status" aria-live="polite"></p>
+    <p class="foot">
+      <a class="by" href="https://www.instagram.com/_noe.noe.noe_/" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <rect x="2.5" y="2.5" width="19" height="19" rx="5.5"/>
+          <circle cx="12" cy="12" r="4.4"/>
+          <circle cx="17.6" cy="6.4" r="1.3" fill="currentColor" stroke="none"/>
+        </svg>_noe.noe.noe_
+      </a>
+    </p>
+  </div>
+</div>
+
+<div class="wrap">
+
+<p class="sess" id="sess" hidden><img id="sesspf" alt="" hidden><span id="sessn"></span><button type="button" id="logout">로그아웃</button></p>
+
+<div class="mast">
+  <div class="eyebrow">
+    <span id="eb"></span>
+    <span class="r" id="ebr"></span>
+  </div>
+  <div class="mast-hd">
+    <h1><em>G･LAB</em></h1>
+    <a class="chat" id="chatlink" href="#" target="_blank" rel="noopener">오픈채팅방
+      <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1"
+           stroke-linecap="square" aria-hidden="true"><path d="M4 10 10.3 3.7"/><path d="M5.2 3.7h5.1v5.1"/></svg>
+    </a>
+  </div>
+  <p class="sub">GSRC의 훈련팀 G-LAB(구파발 러닝랩) 훈련표입니다.</p>
+  <dl class="facts" id="facts"></dl>
+    <div class="prog" id="prog" role="progressbar" aria-valuemin="1" aria-valuemax="19"></div>
+</div>
+
+<section id="board">
+  <div class="tabs" role="tablist" aria-label="훈련표 보기">
+    <button type="button" role="tab" data-t="now" aria-selected="true">이번주 훈련</button>
+    <button type="button" role="tab" data-t="all" aria-selected="false">전체 일정</button>
+    <div class="tabctl">
+      <div class="vt mini" id="viewmode" data-for="now" role="group" aria-label="보기 범위">
+        <button type="button" data-m="all">전체</button>
+        <button type="button" data-m="pick">내 조</button>
+      </div>
+      <div class="vt mini" id="viewtabs" data-for="all" role="group" aria-label="보기 방식" hidden>
+        <button type="button" data-v="list" aria-pressed="false">주차별</button>
+        <button type="button" data-v="cal" aria-pressed="true">달력</button>
+      </div>
+    </div>
+  </div>
+
+  <div data-tab="now" id="this-week">
+    <div class="now" id="now"></div>
+  </div>
+
+  <div data-tab="all" id="schedule" hidden>
+    <div data-view="list" hidden>
+      <div id="weeks"></div>
+    </div>
+    <div data-view="cal">
+      <div id="cal"></div>
+      <div class="callegend">
+        <span><em class="t"></em>목요일 트랙</span>
+        <span><em class="l"></em>일요일 장거리</span>
+        <span class="lg-r"><em class="r"></em>대회</span>
+        <span><em class="tp"></em>테이퍼링</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="pace">
+  <div class="shead"><h2>조별 기준 페이스</h2><span>400m 랩 / km 페이스</span></div>
+  <p class="lede">조 배정은 10km 기록 기준. I(인터벌)가 기준이고 나머지 존은 여기서 계산됨</p>
+  <div class="scroller"><table id="base"></table></div>
+</section>
+
+<section id="pacechart">
+  <div class="shead"><h2>페이스 환산표</h2><span>참고</span></div>
+  <p class="lede">우리 훈련표는 1레인 400m 기준이다. 바깥 레인에서 뛰면 한 바퀴가 길어지니 랩타임도 그만큼 늘려야 같은 페이스가 된다.</p>
+
+  <div class="calc">
+    <div class="calcin">
+      <div>
+        <dt>400m 랩타임</dt>
+        <div class="f"><input id="clap" type="number" inputmode="numeric" min="30" max="300"
+             step="1" aria-label="400m 랩타임(초)"><s>초</s></div>
+      </div>
+      <div>
+        <dt>뛴 레인</dt>
+        <div class="vt" id="clane" role="group" aria-label="레인 선택"></div>
+      </div>
+    </div>
+    <div class="calcout" id="calcout"></div>
+  </div>
+
+  <div id="charts"></div>
+</section>
+
+<section id="routine">
+  <div class="shead"><h2>훈련 공통 순서</h2><span>매 세션</span></div>
+  <ol class="chain" id="routine-list"></ol>
+</section>
+
+<section id="plan">
+  <div class="shead"><h2>변속주 5단계</h2><span>시즌 진행</span></div>
+  <ol class="chain" id="steps"></ol>
+  <p class="note">짧고 빠른 것에서 길고 레이스 페이스에 가까운 것으로. 마지막 2주는 테이퍼링</p>
+</section>
+
+<footer>
+  <span id="f1"></span>
+  <a class="by" id="adminlink" href="#" hidden>Admin</a>
+  <a class="by" href="https://www.instagram.com/_noe.noe.noe_/" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <rect x="2.5" y="2.5" width="19" height="19" rx="5.5"/>
+      <circle cx="12" cy="12" r="4.4"/>
+      <circle cx="17.6" cy="6.4" r="1.3" fill="currentColor" stroke="none"/>
+    </svg>_noe.noe.noe_
+  </a>
+</footer>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-t">
+  <div class="sheet-hd">
+    <h3 id="sheet-t"></h3><span class="wd" id="sheet-d"></span>
+    <button type="button" id="sheet-x">닫기</button>
+  </div>
+  <div class="sheet-bd" id="sheet-bd"></div>
+</aside>
+
+<script type="module">
+const { session, zones, pace } = await import('./calc.js?v=' + Date.now());
+
+const el = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' });
+const md = d => { const [, m, day] = d.split('-'); return `${+m}/${+day}`; };
+const ZONE = { R:'R 반복', I:'I 인터벌', T:'T 역치', M:'M 마라톤', float:'회복', E:'E 조깅' };
+const cell = (big, small) => `<td><b>${big}</b>${small ? `<s>${small}</s>` : ''}</td>`;
+
+// ---- 입장 게이트 ----
+// build.mjs 가 ENC 에 암호문을 심는다. 비어 있으면 plan.enc 를 받아온다.
+// 코드가 틀리면 AES-GCM 인증이 깨져 decrypt 가 그대로 던진다.
+// glab.html(오프라인 단일 파일)에는 평문이 들어간다. 그 파일은 git 에 올리지 않는다.
+const ENC = null, RAW = null;
+// 카카오 로그인. 워커 주소를 넣으면 게이트에 로그인 버튼이 뜬다. 배포는 README.
+// 비워두면 지금까지처럼 입장코드만 받는다.
+const AUTH = 'https://glab-auth.iamsoyeon316.workers.dev';
+// 입장 세션. 코드를 만료 시각과 함께 저장하고, 지나면 다시 묻는다.
+// 코드를 바꿔 다시 빌드하면 저장된 코드로는 복호화가 깨져 만료 전이라도 다시 묻는다.
+const CK = 'glab.code', TTL = 7 * 24 * 60 * 60 * 1000;   // 7일
+let who = '', face = '';   // 카카오 닉네임과 프로필 사진. 입장코드와 같이 보관한다.
+let boss = false;          // 운영자 표시. 링크를 띄울지만 정한다. 실제 통과는 워커가 본다.
+let sess = false;   // 게이트를 통과해 들어왔는지. 오프라인 단일 파일에선 false 다.
+const plan = await unlock();
+// 여기까지 왔으면 열쇠가 확인된 것이다. 이제야 지면을 연다.
+// 이 한 줄이 새로고침 때 훈련표가 비쳤다 사라지는 걸 막는다.
+document.body.classList.remove('locked');
+
+async function unlock() {
+  if (RAW) return RAW;
+  const raw = (ENC || await (await fetch('plan.enc?v=' + Date.now())).text()).trim();
+  const o = JSON.parse(atob(raw));
+  const u8 = b => Uint8Array.from(atob(b), ch => ch.charCodeAt(0));
+
+  const tryCode = async code => {
+    const km = await crypto.subtle.importKey('raw', new TextEncoder().encode(code),
+      'PBKDF2', false, ['deriveKey']);
+    const key = await crypto.subtle.deriveKey(
+      { name: 'PBKDF2', salt: u8(o.salt), iterations: o.iter, hash: 'SHA-256' },
+      km, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+    const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: u8(o.iv) }, key, u8(o.ct));
+    return JSON.parse(new TextDecoder().decode(pt));
+  };
+
+  const saved = (() => {
+    try {
+      const v = JSON.parse(localStorage.getItem(CK));
+      if (!v || !v.c) return null;
+      if (Date.now() > v.e) { localStorage.removeItem(CK); return null; }
+      who = v.n || ''; face = v.p || ''; boss = !!v.a;
+      return v.c;
+    } catch (e) { return null; }
+  })();
+  const remember = code => {
+    try { localStorage.setItem(CK, JSON.stringify({ c: code, e: Date.now() + TTL, n: who, p: face, a: boss })); } catch (e) {}
+  };
+  if (saved) { try { const data = await tryCode(saved); sess = true; return data; } catch (e) {} }
+
+  // 워커가 로그인을 확인하면 #c=입장코드 를 달아 돌려보낸다.
+  // 주소창에서 바로 지우고, 평소 입장과 똑같이 저장한다. #g=4 같은 해시는 건드리지 않는다.
+  const frag = new URLSearchParams(location.hash.slice(1));
+  const ret = { c: frag.get('c'), e: frag.get('e') };
+  if (frag.get('n')) who = frag.get('n');
+  if (frag.get('p')) face = frag.get('p');
+  if (frag.get('a')) boss = true;
+  if (ret.c || ret.e) history.replaceState(null, '', location.pathname + location.search);
+  if (ret.c) { try { const data = await tryCode(ret.c); remember(ret.c); sess = true; return data; } catch (e) {} }
+
+  const gate = el('gate'), form = el('gatef'), input = el('gatei'),
+        btn = el('gateb'), err = el('gatee');
+  gate.hidden = false;
+  if (AUTH) {
+    el('klogin').hidden = false;
+    el('kakaob').href = AUTH.replace(/\/$/, '') + '/login';
+    el('gatem').innerHTML = '구파발 훈련팀 전용 훈련표입니다.<br>카카오로 로그인하세요.';
+    form.hidden = true;   // 입장코드는 워커가 없을 때만 쓰는 뒷문이다
+  } else {
+    input.focus();
+  }
+  if (ret.e) err.innerHTML = '<b>' + (ret.e === 'cancel' ? '로그인이 취소되었습니다'
+    : '로그인을 확인하지 못했습니다 (' + ret.e.replace('.', ' ') + ')') + '</b>';
+  else if (ret.c) err.innerHTML = '<b>입장코드가 바뀌었습니다. 운영자에게 알려주세요</b>';
+
+  return new Promise(resolve => {
+    form.addEventListener('submit', async ev => {
+      ev.preventDefault();
+      const code = input.value.trim();
+      if (!code) return;
+      btn.disabled = true; err.textContent = '확인하는 중';
+      try {
+        const data = await tryCode(code);
+        remember(code);
+        sess = true;
+        gate.hidden = true;
+        resolve(data);
+      } catch (e) {
+        btn.disabled = false;
+        err.innerHTML = '<b>코드가 맞지 않습니다</b>';
+        input.select();
+      }
+    });
+  });
+}
+const c = plan.crew;
+const upcoming = plan.weeks.find(w => (w.sun || w.thu) >= today) || plan.weeks[plan.weeks.length - 1];
+
+// ---- 보기 모드 ----
+// mode: 'all' 전체 8개 조 / 'mine' 내 조만. 기본은 전체.
+// 조는 localStorage 에 남기고, #g=4 해시가 있으면 해시가 이긴다.
+const GK = 'glab.group', MK = 'glab.mode';
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} },
+};
+const findGroup = v => v == null ? -1
+  : plan.groups.findIndex(g => g.id === v || g.id === v + '조' || g.id.replace('조', '') === v);
+
+let myIdx = -1, mode = 'all', showOld = false;
+const hashG = (location.hash.match(/g=([^&]+)/) || [])[1];
+if (hashG) { myIdx = findGroup(decodeURIComponent(hashG)); if (myIdx >= 0) mode = 'mine'; }
+if (myIdx < 0) {
+  myIdx = findGroup(store.get(GK));
+  if (myIdx >= 0 && store.get(MK) === 'mine') mode = 'mine';
+}
+const mine = () => (mode === 'mine' && myIdx >= 0 ? myIdx : -1);
+const stage = plan.stageOf[upcoming.type] || '';
+
+const TEAM = `<b>[G-LAB]</b> ${esc(c.parentFull)} 훈련팀`;
+const HEAD = `${TEAM} / ${esc(plan.season.name)}`;
+el('eb').innerHTML = HEAD;
+el('ebr').textContent = `목표 ${plan.season.race} ${plan.season.raceDate.replace(/-/g, '.')}`;
+el('chatlink').href = c.chat;
+if (sess) {
+  el('sess').hidden = false;
+  el('sessn').innerHTML = who ? '<b>' + esc(who) + '</b> 님' : '입장코드로 접속';
+  if (face) {
+    const pf = el('sesspf');
+    pf.onerror = () => { pf.hidden = true; };   // 링크가 깨져도 줄은 그대로 둔다
+    pf.src = face;
+    pf.hidden = false;
+  }
+  el('logout').addEventListener('click', () => {
+    try { localStorage.removeItem(CK); } catch (e) {}
+    location.reload();
+  });
+}
+el('f1').innerHTML = TEAM;
+if (boss && AUTH) {
+  el('adminlink').href = AUTH.replace(/\/$/, '') + '/admin';
+  el('adminlink').hidden = false;
+}
+
+// 요약 수치
+const raceIn = Math.round((new Date(plan.season.raceDate) - new Date(today)) / 864e5);
+function drawFacts() {
+  const g = myIdx >= 0 ? plan.groups[myIdx] : null;
+  el('facts').innerHTML = [
+    ['이번 주', `<mark>${upcoming.n}</mark>`, `/ ${plan.season.totalWeeks}주차`],
+    ['다음 훈련', md(upcoming.thu), '목'],
+    ['대회까지', raceIn, '일'],
+    ['내 조', g ? esc(g.id) : '-', g ? `10km ${esc(g.tenK)}` : '미설정'],
+  ].map(([t, v, u]) => `<div class="fact"><dt>${t}</dt><dd>${v}<s>${u}</s></dd></div>`).join('');
+
+  const pct = Math.round(upcoming.n / plan.season.totalWeeks * 100);
+  const p = el('prog');
+  p.innerHTML = `<i style="width:${pct}%"></i>`;
+  p.setAttribute('aria-valuenow', upcoming.n);
+  p.setAttribute('aria-valuemax', plan.season.totalWeeks);
+  p.setAttribute('aria-label', `${plan.season.totalWeeks}주 중 ${upcoming.n}주차`);
+}
+
+// 조별 기준 페이스
+const keys = Object.keys(plan.offsets);
+function drawBase() {
+  el('base').innerHTML =
+  `<thead><tr><th>조</th><th>10km 기준</th><th>목표 풀코스</th>${keys.map(k => `<th>${ZONE[k]}</th>`).join('')}</tr></thead>` +
+  `<tbody>${plan.groups.map((g, i) => {
+    const z = zones(g, plan.offsets);
+    return `<tr class="${i === myIdx ? 'on' : ''}"><td>${esc(g.id)}</td><td class="pl">${esc(g.tenK)}</td><td class="pl">${esc(g.goal)}</td>` +
+      keys.map(k => cell(pace(z[k]), z[k] + '초')).join('') + '</tr>';
+  }).join('')}</tbody>`;
+}
+
+// 표 세 가지
+const tbl = (head, rows) =>
+  `<div class="scroller"><table><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>`;
+
+const lapTable = t => tbl(
+  '<th>조</th><th>총 바퀴</th><th>전반 질주</th><th>후반 질주</th><th>회복</th><th>질주 횟수</th><th>총거리</th><th>예상</th>',
+  plan.groups.map((g, i) => { const s = session(g, i, t, plan.offsets);
+    return `<tr class="${i === myIdx ? 'on' : ''}"><td>${esc(g.id)}</td>`
+      + cell(s.laps + '바퀴', `1~${s.split} / ${s.split + 1}~${s.laps}`)
+      + cell(s.rep + '초', `${s.repPace} / ${s.repTime}`)
+      + cell(s.back + '초', s.backPace)
+      + cell(s.rec + '초', `${s.recPace} / ${s.recTime}`)
+      + cell(s.reps + '회', `회복 ${s.recs}회`)
+      + cell(s.km + 'km', '') + cell(s.total, '') + '</tr>'; }).join(''));
+
+const setTable = t => tbl(
+  `<th>조</th><th>목표</th><th>질주 ${t.rep}m</th><th>회복 ${t.rec}m</th><th>세트</th><th>총거리</th><th>예상</th>`,
+  plan.groups.map((g, i) => { const s = session(g, i, t, plan.offsets);
+    return `<tr class="${i === myIdx ? 'on' : ''}"><td>${esc(g.id)}</td><td class="pl">${esc(g.goal)}</td>`
+      + cell(s.rep + '초', `${s.repPace} / ${s.repTime}`)
+      + cell(s.rec + '초', `${s.recPace} / ${s.recTime}`)
+      + cell(s.sets + '세트', '')
+      + cell(s.km + 'km', s.laps + '바퀴') + cell(s.total, '') + '</tr>'; }).join(''));
+
+const rawTable = t => tbl(
+  `<th>조</th><th>질주 ${t.rep}m</th><th>회복 ${t.rec}m</th><th>세트</th><th>총거리</th><th>소요</th>`,
+  plan.groups.map((g, i) => { const s = session(g, i, t, plan.offsets);
+    return `<tr class="${i === myIdx ? 'on' : ''}"><td>${esc(g.id)}</td>`
+      + cell(s.rep + '초', `${s.repPace} / ${s.repTime}`)
+      + cell(s.recTime, s.recPace)
+      + cell(s.sets + '세트', s.last ? `마지막 ${esc(s.last)}` : '')
+      + cell(s.km + 'km', '') + cell(s.total, '') + '</tr>'; }).join(''));
+
+// 내 조 카드. 3칸 요약(질주/회복/분량) + 나머지는 라벨 목록.
+// 타입이 달라도 3칸의 의미는 고정한다.
+function factsOf(t, s) {
+  const rec = t.mode === 'table' ? [s.recTime, s.recPace] : [s.rec + '초', s.recPace];
+  const bulk = (t.mode === 'laps' || t.mode === 'ladder')
+    ? [s.laps + '바퀴', s.km + 'km'] : [s.sets + '세트', s.km + 'km'];
+  const rep = t.mode === 'ladder' ? [s.rep + '초', pace(s.rep) + ' 시작'] : [s.rep + '초', s.repPace];
+  return [['질주', rep[0], rep[1]], ['회복', rec[0], rec[1]], ['분량', bulk[0], bulk[1]]];
+}
+function rowsOf(t, s) {
+  if (t.mode === 'ladder') return [
+    ['시퀀스', seqStr(s), `질주 블록 ${s.blocks}개`],
+    ...s.reps.map((r, k) => [`${4 - k}바퀴 질주`, `${r}초`, pace(r)]),
+    ['회복 1바퀴', `${s.rec}초`, `${s.recPace}, 매 블록 뒤 (마지막 제외)`],
+    ['예상 소요', s.total, ''],
+  ];
+  if (t.mode === 'laps') return [
+    ['후반 질주', `${s.back}초`, `${s.backPace} / ${s.split + 1}바퀴부터`],
+    ['구간 소요', `질주 ${s.repTime}`, `회복 ${s.recTime}`],
+    ['질주 횟수', `${s.reps}회`, `회복 ${s.recs}회`],
+    ['예상 소요', s.total, ''],
+  ];
+  if (t.mode === 'table') return [
+    ['구간 소요', `질주 ${s.repTime}`, ''],
+    ...(s.last ? [['마지막 세트', s.last, '']] : []),
+    ['소요', s.total, ''],
+  ];
+  return [
+    ['구간 소요', `질주 ${s.repTime}`, `회복 ${s.recTime}`],
+    ['총거리', `${s.km}km`, `${s.laps}바퀴`],
+    ['예상 소요', s.total, ''],
+  ];
+}
+function mineCard(t, i) {
+  const g = plan.groups[i], ss = session(g, i, t, plan.offsets);
+  return `
+    <div class="mine-hd"><h4>${esc(g.id)}</h4>
+      <span>10km ${esc(g.tenK)} / 목표 ${esc(g.goal)}</span></div>
+    <dl class="facts three">${factsOf(t, ss).map(([k, v, u]) =>
+      `<div class="fact"><dt>${k}</dt><dd>${v}<s>${u}</s></dd></div>`).join('')}</dl>
+    <dl class="info">${rowsOf(t, ss).map(([k, v, u]) =>
+      `<div><dt>${k}</dt><dd>${v}${u ? ` <span>${u}</span>` : ''}</dd></div>`).join('')}</dl>`;
+}
+
+const seqStr = s => s.seq.join('');
+
+// 장거리. 회전 페이스는 "450" = 4'50" 표기로 들어온다.
+const mmss = v => `${v.slice(0, -2)}'${v.slice(-2)}"`;
+const runKm = (lt, g) => Math.round(lt.loop * (g.laps.length - (g.half ? 0.5 : 0)) * 10) / 10;
+const nth = (lt, g, k) => (g.half && k === g.laps.length - 1) ? '0.5회전' : `${k + 1}회전`;
+
+function longTable(lt) {
+  const max = Math.max(...lt.groups.map(g => g.laps.length));
+  const head = '<th>조</th><th>목표</th><th>대상</th>'
+    + [...Array(max)].map((_, k) => `<th>${k + 1}회전</th>`).join('') + '<th>총거리</th>';
+  return tbl(head, plan.groups.map((g, i) => {
+    const x = lt.groups[i];
+    if (!x || !x.laps.length) return `<tr><td>${esc(g.id)}</td><td class="pl" colspan="${max + 3}">자료 없음</td></tr>`;
+    return `<tr><td>${esc(g.id)}</td><td class="pl">${esc(x.target)}</td><td class="pl">${esc(x.who)}</td>`
+      + [...Array(max)].map((_, k) => x.laps[k]
+          ? cell(mmss(x.laps[k]), nth(lt, x, k)) : '<td></td>').join('')
+      + cell(runKm(lt, x) + 'km', '') + '</tr>';
+  }).join(''));
+}
+
+function longMine(lt, i) {
+  const g = plan.groups[i], x = lt.groups[i];
+  const head = `<div class="mine-hd"><h4>${esc(g.id)}</h4>
+    <span>10km ${esc(g.tenK)} / 목표 ${esc(g.goal)}</span></div>`;
+  if (!x || !x.laps.length) return head + '<p class="long">이 조의 장거리 처방은 아직 자료 없음</p>';
+  const last = x.laps[x.laps.length - 1];
+  return head + `
+    <dl class="facts three">
+      <div class="fact"><dt>목표</dt><dd>${esc(x.target.replace(/ 도전.*/, ''))}<s>${runKm(lt, x)}km</s></dd></div>
+      <div class="fact"><dt>시작</dt><dd>${mmss(x.laps[0])}<s>1회전</s></dd></div>
+      <div class="fact"><dt>마무리</dt><dd>${mmss(last)}<s>${nth(lt, x, x.laps.length - 1)}</s></dd></div>
+    </dl>
+    <dl class="info">
+      ${x.laps.map((v, k) => `<div><dt>${nth(lt, x, k)}</dt><dd>${mmss(v)} <span>/km</span></dd></div>`).join('')}
+      <div><dt>대상</dt><dd>${esc(x.who)}</dd></div>
+    </dl>`;
+}
+
+function longBlock(w) {
+  if (!w.sun) return '';
+  const lt = w.longType && plan.longTypes[w.longType];
+  return `
+    <div class="blk">
+      <h3><b>일요일</b><span>${esc(w.long)}</span></h3>
+      ${!lt ? '' : `
+        <ul class="rules">${lt.intro.map(t => `<li>${esc(t)}</li>`).join('')}</ul>
+        ${mine() >= 0 ? longMine(lt, mine()) : longTable(lt)}
+        <p class="note">${esc(lt.note)}</p>`}
+    </div>`;
+}
+
+const ladderTable = t => tbl(
+  '<th>조</th><th class="seq">시퀀스</th><th>4바퀴</th><th>3바퀴</th><th>2바퀴</th><th>1바퀴</th><th>회복 1바퀴</th><th>총거리</th><th>예상</th>',
+  plan.groups.map((g, i) => { const s = session(g, i, t, plan.offsets);
+    return `<tr><td>${esc(g.id)}</td><td class="seq">${seqStr(s)}</td>`
+      + s.reps.map(r => cell(r + '초', pace(r))).join('')
+      + cell(s.rec + '초', s.recPace)
+      + cell(s.km + 'km', s.laps + '바퀴') + cell(s.total, '') + '</tr>'; }).join(''));
+
+const renderTable = t => t.mode === 'ladder' ? ladderTable(t)
+  : t.mode === 'laps' ? lapTable(t) : t.mode === 'table' ? rawTable(t) : setTable(t);
+
+const body = (w, withRace, only) => {
+  const t = plan.types[w.type];
+  return `
+    ${withRace && w.race ? `<p class="rcline"><b>대회</b>${esc(w.race)}</p>` : ''}
+    ${only === 'l' ? '' : `<div class="blk">
+      <h3><b>목요일</b><span>트랙 ${esc(t ? t.label : w.type)}</span></h3>
+      ${t && t.rules ? `<ul class="rules">${t.rules.map(r => `<li>${esc(r)}</li>`).join('')}</ul>` : ''}
+      ${!t ? '<p class="long">조별표 미정. 훈련 포맷 확정 후 반영</p>' : mine() >= 0 ? mineCard(t, mine()) : renderTable(t)}
+      ${t && t.derived ? '<p class="note warn">아래 수치는 실제 배포표가 아니라 조별 기준 페이스에서 계산한 추정치</p>' : ''}
+      ${t && mine() >= 0 ? '<a class="allview" data-all="1" role="button" tabindex="0">전체 조 보기</a>' : ''}
+    </div>`}
+    ${only === 't' ? '' : longBlock(w)}`;
+};
+
+// 이번 주
+function drawNow() {
+  el('now').innerHTML = `
+  <div class="hd">
+    <span class="wk">${upcoming.n}주차</span>
+    <span class="dt">${md(upcoming.thu)}(목)${upcoming.sun ? ` / ${md(upcoming.sun)}(일)` : ''}</span>
+    ${upcoming.race ? `<span class="rc"><b>${esc(upcoming.race)}</b></span>` : ''}
+    <button type="button" class="shr" id="share" aria-label="이번 주 훈련표 이미지로 공유">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
+        <path d="M8 1.5v8M8 1.5 5.2 4.3M8 1.5l2.8 2.8"/>
+        <path d="M3 8.2v5.3h10V8.2"/>
+      </svg>
+    </button>
+  </div>
+  ${body(upcoming)}`;
+}
+
+// 변속주 5단계
+el('steps').innerHTML = plan.progression.map((k, n) =>
+  `<li class="${k === stage ? 'on' : ''}"><span><b>${n + 1}</b>${esc(k)}</span></li>`).join('');
+
+// 페이스 환산표. 원본 표를 옮겨적지 않고 공식으로 만든다.
+const LANES = [400, 407, 415, 423, 430.7, 438.6, 446.5, 454.4];
+const clk = t => { t = Math.round(t); return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`; };
+const hms = t => { t = Math.round(t);
+  return `${Math.floor(t / 3600)}:${String(Math.floor(t % 3600 / 60)).padStart(2, '0')}'${String(t % 60).padStart(2, '0')}"`; };
+const sec = m => Number.isInteger(m) ? `${m}초` : `${m.toFixed(1)}초`;
+
+// 5초 간격 페이스 목록
+const paces = (from, to) => {
+  const out = [];
+  for (let p = from; p <= to; p += 5) out.push(p);
+  return out;
+};
+
+function drawCharts() {
+  const my = mine() >= 0 ? Math.round(plan.groups[mine()].lap * 2.5 / 5) * 5 : -1;
+  const rowCls = p => [p % 30 === 0 ? 'half' : '', p === my ? 'on' : ''].filter(Boolean).join(' ');
+
+  const laneTable = tbl(
+    '<th>페이스</th>' + LANES.map((l, i) => `<th>${i + 1}레인<s>${l}m</s></th>`).join('') + '<th>풀코스</th>',
+    paces(180, 360).map(p => `<tr class="${rowCls(p)}"><td>${clk(p)}</td>`
+      + LANES.map(l => `<td class="n">${clk(p * l / 1000)}</td>`).join('')
+      + `<td class="n">${hms(p * 42.195)}</td></tr>`).join(''));
+
+  const distTable = tbl(
+    '<th>페이스</th><th>100m</th><th>200m</th><th>300m</th><th>400m</th><th>5km</th><th>10km</th>',
+    paces(180, 420).map(p => `<tr class="${rowCls(p)}"><td>${clk(p)}</td>`
+      + [.1, .2, .3, .4].map(d => `<td class="n">${sec(p * d)}</td>`).join('')
+      + `<td class="n">${clk(p * 5)}</td><td class="n">${clk(p * 10)}</td></tr>`).join(''));
+
+  el('charts').innerHTML = `
+    <details class="chartwrap"><summary>레인별 랩타임</summary>
+      <div class="body">${laneTable}
+        <div class="credit">원본 트랙 레인별 페이스표 / KAMA 한국체대 동문 마라톤 아카데미 박정환</div>
+      </div></details>
+    <details class="chartwrap"><summary>거리별 통과시간</summary>
+      <div class="body">${distTable}</div></details>`;
+}
+
+// ---- 페이스 계산기 ----
+// 레인이 바깥일수록 한 바퀴가 길다. 같은 랩타임이라도 실제 페이스는 그만큼 빨라진다.
+let cLane = 0;
+el('clane').innerHTML = LANES.map((l, i) =>
+  `<button type="button" data-i="${i}" aria-pressed="${i === 0}" title="${l}m">${i + 1}</button>`).join('');
+el('clane').addEventListener('click', ev => {
+  const b = ev.target.closest('button'); if (!b) return;
+  cLane = +b.dataset.i;
+  [...el('clane').children].forEach((x, i) => x.setAttribute('aria-pressed', i === cLane));
+  calcDraw();
+});
+el('clap').addEventListener('input', calcDraw);
+
+function calcDraw() {
+  const lap = parseFloat(el('clap').value);
+  const out = el('calcout');
+  if (!(lap > 0)) { out.innerHTML = '<p class="calcnote">랩타임을 넣으면 환산된다.</p>'; return; }
+  const p = lap * 1000 / LANES[cLane];   // km 당 초
+  out.innerHTML = `
+    <p class="calcpace"><b>${clk(p)}</b><span>/ km &nbsp;/&nbsp; 한 바퀴 ${LANES[cLane]}m</span></p>
+    ${tbl(LANES.map((l, i) => `<th>${i + 1}레인<s>${l}m</s></th>`).join(''),
+      `<tr>${LANES.map((l, i) =>
+        `<td class="n${i === cLane ? ' me' : ''}">${(p * l / 1000).toFixed(1)}초</td>`).join('')}</tr>`)}
+    ${tbl('<th>1km</th><th>3km</th><th>5km</th><th>10km</th><th>하프</th><th>풀코스</th>',
+      `<tr><td class="n">${clk(p)}</td><td class="n">${clk(p * 3)}</td><td class="n">${clk(p * 5)}</td>`
+      + `<td class="n">${clk(p * 10)}</td><td class="n">${hms(p * 21.0975)}</td>`
+      + `<td class="n">${hms(p * 42.195)}</td></tr>`)}`;
+}
+el('clap').value = mine() >= 0 ? plan.groups[mine()].lap : 108;
+calcDraw();
+
+// 훈련 공통 순서
+el('routine-list').innerHTML = plan.routine.map(r => `<li><span>${esc(r.split(' (')[0])}</span></li>`).join('');
+
+// 달력. 목요일은 트랙, 일요일은 장거리로 찍는다.
+const marks = {};
+plan.weeks.forEach(w => {
+  marks[w.thu] = { w, kind: 't', label: w.label || w.type };
+  if (w.sun) marks[w.sun] = { w, kind: 'l', label: '장거리' };
+});
+
+const pad = n => String(n).padStart(2, '0');
+// 테이퍼는 마지막 두 주차의 시작부터 대회날까지다.
+const taperFrom = plan.weeks[plan.weeks.length - 2].thu;
+const taperTo = plan.season.raceDate;
+const DOW = ['일', '월', '화', '수', '목', '금', '토'];
+
+function month(y, m) {                       // m 은 1~12
+  const start = new Date(y, m - 1, 1).getDay();
+  const days = new Date(y, m, 0).getDate();
+  const cells = [];
+  for (let i = 0; i < start; i++) cells.push('<td></td>');
+  for (let d = 1; d <= days; d++) {
+    const iso = `${y}-${pad(m)}-${pad(d)}`;
+    const k = marks[iso];
+    const cls = [k && k.w === upcoming ? 'on' : '', iso < today ? 'past' : '',
+      iso >= taperFrom && iso <= taperTo ? 'taper' : ''].filter(Boolean).join(' ');
+    let inner = `<b>${d}</b>`;
+    if (k) {
+      inner += `<i class="${k.kind}"><u>${k.w.n}w</u>${esc(k.label)}</i>`;
+      if (k.kind === 'l' && k.w.race) inner += `<i class="r" title="${esc(k.w.race)}">${esc(k.w.race)}</i>`;
+      inner = `<button type="button" class="daybtn" data-w="${k.w.n}" data-k="${k.kind}"
+        aria-label="${k.w.n}주차 ${k.kind === 'l' ? '일요일 장거리' : '목요일 트랙'} 훈련표 열기">${inner}</button>`;
+    }
+    cells.push(`<td class="${cls}">${inner}</td>`);
+  }
+  while (cells.length % 7) cells.push('<td></td>');
+  const rows = [];
+  for (let i = 0; i < cells.length; i += 7) rows.push(`<tr>${cells.slice(i, i + 7).join('')}</tr>`);
+  const wks = plan.weeks.filter(w => w.thu.startsWith(`${y}-${pad(m)}`) || w.sun.startsWith(`${y}-${pad(m)}`));
+  const a = wks[0], b = wks[wks.length - 1];
+  const span = !wks.length ? '' : a === b ? `${a.n}주차` : `${a.n}~${b.n}주차`;
+  return `<div class="mo">
+      <button type="button" class="mnav" data-d="-1" aria-label="이전 달">&larr;</button>
+      <h3>${y}.${m}${span ? `<span>/ ${span}</span>` : ''}</h3>
+      <button type="button" class="mnav" data-d="1" aria-label="다음 달">&rarr;</button>
+    </div>
+    <table class="cal"><thead><tr>${DOW.map(d => `<th>${d}</th>`).join('')}</tr></thead>
+    <tbody>${rows.join('')}</tbody></table>`;
+}
+
+const [y0, m0] = plan.weeks[0].thu.split('-').map(Number);
+const [y1, m1] = plan.weeks[plan.weeks.length - 1].sun.split('-').map(Number);
+const months = [];
+for (let y = y0, m = m0; y < y1 || (y === y1 && m <= m1); m === 12 ? (m = 1, y++) : m++) months.push([y, m]);
+
+// 한 번에 한 달만 그린다. 기본은 이번 주가 속한 달.
+let mi = months.findIndex(([y, m]) => upcoming.thu.startsWith(`${y}-${pad(m)}`));
+if (mi < 0) mi = 0;
+
+function drawMonth() {
+  el('cal').innerHTML = month(...months[mi]);
+  const nav = el('cal').querySelectorAll('.mnav');
+  nav[0].disabled = mi === 0;
+  nav[1].disabled = mi === months.length - 1;
+}
+drawMonth();
+
+// 뷰 토글. #cal 로 들어오면 달력이 먼저 열린다.
+function setView(v) {
+  el('viewtabs').querySelectorAll('button').forEach(b => {
+    const on = b.dataset.v === v;
+    b.setAttribute('aria-pressed', on);
+    document.querySelector(`[data-view="${b.dataset.v}"]`).hidden = !on;
+  });
+}
+el('viewtabs').querySelectorAll('button').forEach(btn =>
+  btn.addEventListener('click', () => {
+    setView(btn.dataset.v);
+    history.replaceState(null, '', btn.dataset.v === 'list' ? '#list' : '#cal');
+  }));
+// 최상위 탭
+function setTab(t) {
+  document.querySelectorAll('.tabs [role=tab]').forEach(b => {
+    const on = b.dataset.t === t;
+    b.setAttribute('aria-selected', on);
+    document.querySelector(`[data-tab="${b.dataset.t}"]`).hidden = !on;
+  });
+  document.querySelectorAll('.tabctl [data-for]').forEach(c => { c.hidden = c.dataset.for !== t; });
+}
+document.querySelectorAll('.tabs [role=tab]').forEach(b =>
+  b.addEventListener('click', () => {
+    setTab(b.dataset.t);
+    history.replaceState(null, '', b.dataset.t === 'all' ? '#cal' : '#now');
+  }));
+
+// #cal 과 #list 는 전체 일정 탭을 연다
+if (location.hash === '#cal' || location.hash === '#list') {
+  setTab('all');
+  if (location.hash === '#list') setView('list');
+  el('board').scrollIntoView();
+}
+
+// 주차 상세 시트. 달력에서 훈련일을 누르면 열린다.
+const sheet = el('sheet'), scrim = el('scrim');
+let lastFocus = null, sheetWeek = null, sheetOnly = null;
+
+function openSheet(w, only) {
+  lastFocus = document.activeElement;
+  sheetWeek = w;
+  sheetOnly = only || null;
+  el('sheet-t').textContent = `${w.n}주차`;
+  el('sheet-d').textContent = only === 'l' ? `${md(w.sun)}(일)`
+    : only === 't' ? `${md(w.thu)}(목)`
+    : `${md(w.thu)}(목)${w.sun ? ` / ${md(w.sun)}(일)` : ''}`;
+  el('sheet-bd').innerHTML = body(w, true, sheetOnly);
+  sheet.classList.add('open'); scrim.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  sheet.scrollTop = 0;
+  el('sheet-x').focus();
+}
+
+function closeSheet() {
+  sheet.classList.remove('open'); scrim.classList.remove('open');
+  document.body.style.overflow = '';
+  if (lastFocus) lastFocus.focus();
+}
+
+el('cal').addEventListener('click', e => {
+  const nav = e.target.closest('.mnav');
+  if (nav && !nav.disabled) {
+    mi = Math.max(0, Math.min(months.length - 1, mi + Number(nav.dataset.d)));
+    drawMonth();
+    return;
+  }
+  const btn = e.target.closest('.daybtn');
+  if (btn) openSheet(plan.weeks.find(w => w.n === Number(btn.dataset.w)), btn.dataset.k);
+});
+el('sheet-x').addEventListener('click', closeSheet);
+scrim.addEventListener('click', closeSheet);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && sheet.classList.contains('open')) closeSheet(); });
+
+// 전체 일정
+function drawWeeks(openState) {
+  // 지난 주차는 최근 3개만 펼쳐 두고 그 이전은 더보기로 접는다
+  const past = plan.weeks.filter(w => (w.sun || w.thu) < today);
+  const hideN = Math.max(0, past.length - 3);
+  el('weeks').innerHTML =
+    (hideN ? `<button type="button" class="more" id="more">${showOld ? '접기' : '더보기'}</button>` : '')
+    + plan.weeks.map((w, wi) => `
+    <details class="${(w.sun || w.thu) < today ? 'done' : ''}${wi < hideN ? ' old' : ''}"${wi < hideN && !showOld ? ' hidden' : ''}>
+      <summary>
+        <b>${w.n}주차</b>
+        <span class="d">${md(w.thu)}${w.sun ? ' / ' + md(w.sun) : ''}</span>
+        <span class="t">${esc(w.label || w.type)}</span>
+        ${w.race ? `<span class="rc">${esc(w.race)}</span>` : ''}
+        ${w === upcoming ? '<span class="x"><i>이번 주</i></span>' : ''}
+      </summary>
+      <div class="body">${body(w, true)}</div>
+    </details>`).join('');
+
+  const more = el('more');
+  if (more) more.addEventListener('click', () => {
+    showOld = !showOld;
+    el('weeks').querySelectorAll('details.old').forEach(d => {
+      d.hidden = !showOld;
+      if (!showOld) d.open = false;          // 접을 때 펼쳐둔 것도 같이 닫는다
+    });
+    more.textContent = showOld ? '접기' : '더보기';
+  });
+
+  const items = [...el('weeks').querySelectorAll('details')];
+  if (openState) items.forEach((d, i) => { d.open = !!openState[i]; });
+
+  // details 는 높이 전환을 지원하지 않아 직접 애니메이션한다.
+  items.forEach(d => {
+    const sum = d.querySelector('summary');
+    let anim = null;
+    sum.addEventListener('click', e => {
+      if (reduce.matches) return;
+      e.preventDefault();
+      if (anim) anim.cancel();
+      const from = d.offsetHeight;
+      const opening = !d.open;
+      if (opening) d.open = true;
+      const to = opening ? d.scrollHeight : sum.offsetHeight;
+      d.style.overflow = 'hidden';
+      anim = d.animate({ height: [from + 'px', to + 'px'] },
+        { duration: 200, easing: 'cubic-bezier(.2,.8,.2,1)' });
+      anim.onfinish = () => { anim = null; d.style.overflow = ''; if (!opening) d.open = false; };
+    });
+  });
+}
+
+const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+
+// 헤더 토글. '내 조'는 누르면 조 선택 시트를 연다.
+function drawMode() {
+  const g = myIdx >= 0 ? plan.groups[myIdx] : null;
+  const b = el('viewmode').querySelectorAll('button');
+  b[0].setAttribute('aria-pressed', mode === 'all');
+  b[1].setAttribute('aria-pressed', mode === 'mine');
+  b[1].innerHTML = g ? `내 조<b>${esc(g.id)}</b><i>&#9656;</i>` : '내 조<i>&#9656;</i>';
+}
+
+function openPicker() {
+  lastFocus = document.activeElement;
+  sheetWeek = null;
+  el('sheet-t').textContent = '내 조 선택';
+  el('sheet-d').textContent = '10km 기록 기준';
+  el('sheet-bd').innerHTML = plan.groups.map((g, i) =>
+    `<button type="button" class="pick" data-pick="${i}" aria-pressed="${i === myIdx}">
+       <b>${esc(g.id)}</b><span>10km ${esc(g.tenK)}</span><em>${esc(g.goal)}</em>
+     </button>`).join('')
+    + '<p class="note">애매하면 아래 조에서 시작해 올라오기</p>';
+  sheet.classList.add('open'); scrim.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  sheet.scrollTop = 0;
+  el('sheet-x').focus();
+}
+
+function renderAll() {
+  const open = [...el('weeks').querySelectorAll('details')].map(d => d.open);
+  drawFacts(); drawBase(); drawMode(); drawNow(); drawCharts(); drawWeeks(open.length ? open : null);
+  if (sheet.classList.contains('open') && sheetWeek) el('sheet-bd').innerHTML = body(sheetWeek, true, sheetOnly);
+}
+renderAll();
+
+// 이번 주 훈련 이미지 공유.
+// 화면 밖 지면에 복제해 표를 자연 폭으로 펼친 뒤 렌더한다. 잘리는 열이 없다.
+function openShare() {
+  lastFocus = document.activeElement;
+  sheetWeek = null;
+  const t = plan.types[upcoming.type];
+  el('sheet-t').textContent = `${upcoming.n}주차`;
+  el('sheet-d').textContent = '훈련표 공유';
+  el('sheet-bd').innerHTML = `
+    <label class="chk"><input type="checkbox" data-blk="0" checked>
+      <b>목요일</b><span>${esc(t ? t.label : upcoming.type)}</span></label>
+    <label class="chk"><input type="checkbox" data-blk="1" ${upcoming.sun ? 'checked' : 'disabled'}>
+      <b>일요일</b><span>${esc(upcoming.sun ? upcoming.long : '일정 없음')}</span></label>
+    <a class="go" id="shotgo" role="button" tabindex="0">내보내기</a>`;
+  sheet.classList.add('open'); scrim.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  sheet.scrollTop = 0;
+  el('sheet-x').focus();
+}
+
+// 선택한 블록마다 이미지를 하나씩 만든다. 둘 다 고르면 파일이 두 개 나온다.
+async function buildShot(blk) {
+  const shot = document.createElement('div');
+  shot.className = 'shot';
+  shot.innerHTML =
+    `<div class="shot-top">${HEAD}</div>`
+    + `<div class="now">${el('now').innerHTML}</div>`
+    + `<div class="shot-bot"><span>${esc(mine() >= 0 ? plan.groups[mine()].id : '전체 조')}</span>`
+    + `<span>studio-noe.github.io/g-lab</span></div>`;
+  document.body.appendChild(shot);
+  try {
+    shot.querySelectorAll('.blk').forEach((b, i) => { if (i !== blk) b.remove(); });
+    shot.querySelector('#share')?.remove();
+    // 지면 폭을 표에 딱 맞춘다. 남는 여백이 생기지 않는다.
+    const tw = [...shot.querySelectorAll('table')].map(t => t.scrollWidth);
+    shot.style.width = (tw.length ? Math.max(...tw) : 460) + 64 + 'px';
+    const canvas = await html2canvas(shot, { backgroundColor: '#ffffff', scale: 2, logging: false });
+    const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+    const day = blk === 0 ? '목요일' : '일요일';
+    return new File([blob], `G-LAB_${upcoming.n}주차_${day}.png`, { type: 'image/png' });
+  } finally {
+    shot.remove();
+  }
+}
+
+async function makeShot(btn) {
+  if (typeof html2canvas !== 'function') { alert('이미지 준비 중. 잠시 후 다시 눌러줘'); return; }
+  const keep = [...el('sheet-bd').querySelectorAll('[data-blk]')]
+    .filter(x => x.checked).map(x => Number(x.dataset.blk));
+  if (!keep.length) { alert('하나 이상 선택해줘'); return; }
+  btn.textContent = '내보내는 중...';
+  try {
+    const files = [];
+    for (const b of keep) files.push(await buildShot(b));
+    closeSheet();
+    if (navigator.canShare && navigator.canShare({ files })) {
+      await navigator.share({ files, title: `G-LAB ${upcoming.n}주차 훈련표` });
+    } else {                                   // 공유 시트가 없으면 하나씩 저장으로 떨어진다
+      files.forEach((f, i) => setTimeout(() => {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(f);
+        a.download = f.name;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+      }, i * 400));
+    }
+  } catch (e) {
+    if (e.name !== 'AbortError') alert('이미지를 만들지 못함. 다시 시도해줘');
+  } finally {
+    btn.textContent = '내보내기';
+  }
+}
+
+el('now').addEventListener('click', e => { if (e.target.closest('#share')) openShare(); });
+
+// 보기 모드 컨트롤
+el('viewmode').addEventListener('click', e => {
+  const b = e.target.closest('[data-m]');
+  if (!b) return;
+  if (b.dataset.m === 'all') { mode = 'all'; store.set(MK, mode); renderAll(); }
+  else openPicker();
+});
+
+// 조 선택 시트에서 고르기
+el('sheet-bd').addEventListener('click', e => {
+  const go = e.target.closest('#shotgo');
+  if (go) { makeShot(go); return; }
+  const p = e.target.closest('[data-pick]');
+  if (!p) return;
+  myIdx = Number(p.dataset.pick);
+  mode = 'mine';
+  store.set(GK, plan.groups[myIdx].id);
+  store.set(MK, mode);
+  closeSheet();
+  renderAll();
+});
+
+// 카드 안의 "전체 조 보기"
+document.addEventListener('click', e => {
+  if (e.target.closest('[data-all]')) { mode = 'all'; store.set(MK, mode); renderAll(); }
+});
+</script>
+</body>
+</html>

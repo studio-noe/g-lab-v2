@@ -1,0 +1,11 @@
+
+# 검토용 산출물
+훈련표_검토.txt
+
+# 평문 훈련 데이터. 웹에는 plan.enc 만 올라간다.
+plan.json
+glab.html
+.code
+
+# wrangler 로컬 캐시
+.wrangler/
