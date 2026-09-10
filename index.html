@@ -1394,6 +1394,25 @@ const VDAY = wd >= 1 && wd <= 4 ? 'thu' : 'sun'; // 월~목 → 목요일, 금~�
 let voteDay = VDAY;      // 링크로 다른 요일을 볼 수 있다.
 let votePick = false;    // 투표를 마치면 버튼 줄을 접는다. 바꾸기를 누르면 다시 편다.
 let votes = null, voteMe = '';
+// KV 는 쓰고 바로 읽으면 이전 값이 나온다. 그래서 내가 누른 것만은 따로 쥐고 있다가
+// 서버 응답 위에 덮어쓴다. 안 그러면 일요일에 투표할 때 방금 한 목요일 투표가 사라진다.
+const VK = 'glab.vote';
+let myVotes = (() => {
+  try {
+    const v = JSON.parse(localStorage.getItem(VK));
+    return v && v.w === upcoming.n ? v.d : {};
+  } catch (e) { return {}; }
+})();
+
+const keepMine = v => {
+  for (const [d] of VDAYS) {
+    if (!(d in myVotes)) continue;
+    v[d] = (v[d] ?? []).filter(x => x.i !== voteMe);
+    if (myVotes[d]) v[d].push({ i: voteMe, n: who, g: myVotes[d] });
+  }
+  try { localStorage.setItem(VK, JSON.stringify({ w: upcoming.n, d: myVotes })); } catch (e) {}
+  return v;
+};
 
 const api = async (path, body) => {
   const r = await fetch(AUTH.replace(/\/$/, '') + path, {
@@ -1493,7 +1512,9 @@ el('sheet-bd').addEventListener('click', async ev => {
   const wait = el('sheet-bd').querySelector('.vote-msg');
   if (wait) wait.textContent = '보내는 중';
   try {
-    votes = (await api('/vote', { w: upcoming.n, d, g })).votes;
+    const r = await api('/vote', { w: upcoming.n, d, g });
+    myVotes[d] = g;
+    votes = keepMine(r.votes);
     votePick = false;   // 방금 골랐으니 접는다
   } catch (e) {
     const msg = el('sheet-bd').querySelector('.vote-msg');
@@ -1507,7 +1528,7 @@ el('sheet-bd').addEventListener('click', async ev => {
 
 if (AUTH && token) {
   api('/votes?w=' + upcoming.n)
-    .then(r => { voteMe = r.me; votes = r.votes; drawVoteSheet(); drawFacts(); })
+    .then(r => { voteMe = r.me; votes = keepMine(r.votes); drawVoteSheet(); drawFacts(); })
     .catch(() => {
       const msg = el('sheet-bd').querySelector('.vote-msg');
       if (msg) msg.innerHTML = '<b>투표 현황을 불러오지 못했습니다</b>';
