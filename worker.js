@@ -1,21 +1,78 @@
-// 카카오 로그인 확인용 워커. Cloudflare Workers 에 올린다.
+// 카카오 로그인 확인과 조 투표를 맡는 워커. Cloudflare Workers 에 올린다.
 //
-//   GET /login  카카오 인가 화면으로 보낸다.
-//   GET /cb     인가코드를 토큰으로 바꾸고, 확인되면 사이트로 #c=입장코드 를 달아 돌려보낸다.
-//   GET /admin  같은 로그인을 거쳐, 허용된 카카오 id 에게만 접속 기록을 보여준다.
+//   GET  /login   카카오 인가 화면으로 보낸다.
+//   GET  /cb      인가코드를 토큰으로 바꾸고, 확인되면 사이트로 돌려보낸다.
+//                 이때 입장코드와 함께 서명한 세션 토큰을 같이 넘긴다.
+//   GET  /votes   주차별 조 투표 현황. 세션 토큰이 있어야 한다.
+//   POST /vote    내 조 투표. 누구인지는 토큰의 서명으로 안다.
+//   GET  /admin   허용된 카카오 id 에게만 접속 기록을 보여준다.
 //
-// 입장코드는 워커 시크릿(ENTRY_CODE)에만 있다. 페이지에는 로그인한 사람만 받아간다.
-// 받아간 뒤엔 지금까지처럼 브라우저가 plan.enc 를 직접 푼다. 복호화는 손대지 않았다.
+// 왜 토큰이 필요한가.
+// 로그인은 본인만 한다. 하지만 로그인이 끝나면 브라우저는 정적 페이지로 돌아가고,
+// 거기 남는 건 닉네임 문자열뿐이다. 그 페이지가 "내가 남기석이다" 라고 말해도
+// 워커는 확인할 방법이 없다. 그래서 로그인을 확인한 그 자리에서 서명을 하나 채워 보낸다.
 //
-// 시크릿 : KAKAO_REST_KEY, KAKAO_CLIENT_SECRET(안 켰으면 생략), ENTRY_CODE, ADMIN_IDS
+// 시크릿 : KAKAO_REST_KEY, KAKAO_CLIENT_SECRET(안 켰으면 생략), ENTRY_CODE, ADMIN_IDS, SESSION_KEY
 // 변수   : SITE (돌아갈 페이지 주소)
-// 저장소 : LOGINS (KV). 카카오 id → { n 닉네임, f 첫 접속, l 마지막 접속, c 횟수 }
+// 저장소 : LOGINS (KV)
+//   접속 기록  <카카오 id>            → { n 닉네임, f 첫 접속, l 마지막 접속, c 횟수 }
+//   조 투표    v:<주차>:<thu|sun>:<id> → 값은 비우고 메타데이터에 { n 닉네임, g 조, t 시각 }
+//              메타데이터를 쓰면 list 한 번으로 전원 투표를 읽는다. get 을 사람 수만큼 돌지 않는다.
+
+const TTL = 7 * 24 * 60 * 60 * 1000;          // 세션 토큰 수명. 페이지의 입장 세션과 맞춘다.
+const DAYS = ['thu', 'sun'];
+
+const b64 = buf => btoa(String.fromCharCode(...new Uint8Array(buf)))
+  .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+// atob 는 바이트 문자열을 준다. UTF-8 로 되돌리지 않으면 한글 닉네임이 깨진다.
+const b64dec = s => new TextDecoder().decode(
+  Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), ch => ch.charCodeAt(0)));
+
+const key = env => crypto.subtle.importKey('raw', new TextEncoder().encode(env.SESSION_KEY),
+  { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+
+const sign = async (env, data) =>
+  b64(await crypto.subtle.sign('HMAC', await key(env), new TextEncoder().encode(data)));
+
+// 토큰 = base64(내용).base64(서명). 내용은 감출 게 아니라 위조만 막으면 된다.
+async function mint(env, me) {
+  const payload = b64(new TextEncoder().encode(JSON.stringify({
+    i: String(me.id), n: me.properties?.nickname ?? '', e: Date.now() + TTL,
+  })));
+  return payload + '.' + await sign(env, payload);
+}
+
+async function verify(env, token) {
+  const [payload, mac] = String(token ?? '').split('.');
+  if (!payload || !mac) return null;
+  if (await sign(env, payload) !== mac) return null;      // 서명이 다르면 위조다
+  try {
+    const v = JSON.parse(b64dec(payload));
+    return Date.now() > v.e ? null : v;
+  } catch (e) { return null; }
+}
+
+// 페이지가 직접 부르는 엔드포인트라 origin 을 밝혀준다.
+// 토큰은 localStorage 에 있어 다른 사이트가 읽지 못한다. 이 목록은 형식에 가깝다.
+const cors = (env, req) => {
+  const o = req.headers.get('origin') ?? '';
+  const ok = o && (env.SITE.startsWith(o) || o.startsWith('http://localhost:'));
+  return ok ? {
+    'access-control-allow-origin': o,
+    'access-control-allow-headers': 'authorization,content-type',
+    'access-control-allow-methods': 'GET,POST,OPTIONS',
+    'vary': 'origin',
+  } : {};
+};
+
+const json = (env, req, data, status = 200) => new Response(JSON.stringify(data),
+  { status, headers: { 'content-type': 'application/json; charset=utf-8', ...cors(env, req) } });
 
 const back = (env, frag) => Response.redirect(env.SITE + '#' + frag, 302);
 
 const authorize = (env, redirect_uri, state) =>
-  // ponytail: state 를 위조 방지용으로 쓰지 않고 돌아갈 곳 표시로만 쓴다. 통과해도
-  // 상대가 얻는 건 자기가 직접 로그인해도 받았을 입장코드뿐이다. /admin 은 id 로 다시 막는다.
+  // ponytail: state 를 위조 방지용이 아니라 돌아갈 곳 표시로만 쓴다. 통과해도 상대가 얻는 건
+  // 자기가 직접 로그인해도 받았을 것뿐이고, /admin 은 카카오 id 로 다시 막는다.
   Response.redirect('https://kauth.kakao.com/oauth/authorize?' +
     new URLSearchParams({ client_id: env.KAKAO_REST_KEY, redirect_uri, response_type: 'code', state }), 302);
 
@@ -32,14 +89,24 @@ const kst = iso => iso
 // 접속 기록. 첫 접속은 남기고 마지막 접속과 횟수만 갱신한다.
 async function note(env, me) {
   if (!env.LOGINS || !me.id) return;
-  const key = String(me.id), now = new Date().toISOString();
-  const prev = (await env.LOGINS.get(key, 'json')) ?? {};
-  await env.LOGINS.put(key, JSON.stringify({
+  const k = String(me.id), now = new Date().toISOString();
+  const prev = (await env.LOGINS.get(k, 'json')) ?? {};
+  await env.LOGINS.put(k, JSON.stringify({
     n: me.properties?.nickname ?? prev.n ?? '',
     f: prev.f ?? now,
     l: now,
     c: (prev.c ?? 0) + 1,
   }));
+}
+
+// 한 주차의 목/일 투표를 통째로 읽는다. list 두 번이면 끝난다.
+async function readVotes(env, week) {
+  const out = {};
+  for (const d of DAYS) {
+    const { keys } = await env.LOGINS.list({ prefix: `v:${week}:${d}:` });
+    out[d] = keys.map(k => ({ i: k.name.split(':')[3], ...(k.metadata ?? {}) }));
+  }
+  return out;
 }
 
 async function admin(env, me) {
@@ -51,7 +118,7 @@ async function admin(env, me) {
   }
   // ponytail: 사람 수만큼 list + get 을 돈다. 크루 규모면 충분하다. 수백 명이 되면 D1.
   const { keys } = await env.LOGINS.list();
-  const rows = await Promise.all(keys.map(async k =>
+  const rows = await Promise.all(keys.filter(k => !k.name.startsWith('v:')).map(async k =>
     ({ id: k.name, ...((await env.LOGINS.get(k.name, 'json')) ?? {}) })));
   rows.sort((a, b) => String(b.l ?? '').localeCompare(String(a.l ?? '')));
 
@@ -81,8 +148,32 @@ export default {
     // 리다이렉트 주소는 워커 자기 자신이다. 카카오 앱에도 이 주소를 등록한다.
     const redirect_uri = url.origin + '/cb';
 
+    if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors(env, req) });
+
     if (url.pathname === '/login') return authorize(env, redirect_uri, '');
     if (url.pathname === '/admin') return authorize(env, redirect_uri, 'admin');
+
+    // ---- 조 투표 ----
+    if (url.pathname === '/votes' || url.pathname === '/vote') {
+      const who = await verify(env, (req.headers.get('authorization') ?? '').replace(/^Bearer /, ''));
+      if (!who) return json(env, req, { error: 'auth' }, 401);
+
+      if (url.pathname === '/votes') {
+        const week = Number(url.searchParams.get('w'));
+        if (!week) return json(env, req, { error: 'week' }, 400);
+        return json(env, req, { me: who.i, votes: await readVotes(env, week) });
+      }
+
+      const { w, d, g } = await req.json().catch(() => ({}));
+      if (!Number(w) || !DAYS.includes(d)) return json(env, req, { error: 'bad' }, 400);
+      const k = `v:${Number(w)}:${d}:${who.i}`;
+      if (g) {
+        await env.LOGINS.put(k, '', { metadata: { n: who.n, g: String(g).slice(0, 20), t: new Date().toISOString() } });
+      } else {
+        await env.LOGINS.delete(k);   // 조를 비우면 투표 취소다
+      }
+      return json(env, req, { ok: true, votes: await readVotes(env, Number(w)) });
+    }
 
     if (url.pathname === '/cb') {
       const state = url.searchParams.get('state') ?? '';
@@ -123,6 +214,7 @@ export default {
       return back(env, 'c=' + encodeURIComponent(env.ENTRY_CODE) +
         '&n=' + encodeURIComponent(p.nickname ?? '') +
         '&p=' + encodeURIComponent(p.thumbnail_image ?? p.profile_image ?? '') +
+        '&t=' + encodeURIComponent(await mint(env, me)) +
         (boss ? '&a=1' : ''));
     }
 

@@ -515,6 +515,51 @@ body.locked .wrap,body.locked .sheet,body.locked .scrim{display:none}
 .calcout .scroller+.scroller{margin-top:14px}
 .calcout td.me{background:var(--acc-soft);font-weight:800}
 .calcnote{margin:0;font-size:12.5px;color:var(--dim)}
+
+/* ---- 조 투표 ----
+   지면과 같은 조판이다. 고른 조만 검게 채워 어디에 섰는지 한눈에 보이게 한다. */
+/* 투표는 시트 안에서만 산다. 훈련 지면에는 요약 칸의 한 줄만 남는다. */
+.vote-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 12px}
+.vtabs{margin:0}
+.vote-n{font-size:11px;letter-spacing:.06em;color:var(--dim);white-space:nowrap}
+.vote-done{margin:2px 0 0;font-size:12.5px;color:var(--dim)}
+.vote-done b{color:#000;font-weight:800;background:var(--acc);padding:1px 6px;margin-right:2px}
+.vote-done .vote-see{margin:0 0 0 10px}
+.fact.tap{cursor:pointer}
+.fact.tap:hover dd{text-decoration:underline;text-underline-offset:4px}
+.fact.tap:hover dd s{text-decoration:none}
+/* PC 는 한 줄에 아홉, 폰은 두 줄로 5+4 다. */
+.vote-pick{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:6px}
+.vote-pick button{appearance:none;background:none;border:1px solid var(--hair);
+  font:inherit;font-size:12.5px;font-weight:700;padding:7px 4px;cursor:pointer;
+  line-height:1.3;white-space:nowrap}
+.vote-pick button:hover{border-color:#000}
+.vote-pick button[aria-pressed="true"]{background:#000;border-color:#000;color:#fff}
+.vote-pick button:disabled{opacity:.5;cursor:default}
+.vote-msg{margin:8px 0 0;font-size:11.5px;color:var(--dim);min-height:1.2em}
+.vote-msg b{color:#000}
+.vote-see{appearance:none;background:none;border:0;padding:0;margin:8px 0 0;font:inherit;
+  font-size:11.5px;font-weight:700;color:var(--dim);cursor:pointer;
+  display:inline-flex;align-items:center;gap:4px;
+  text-decoration:underline;text-underline-offset:3px}
+.vote-see svg{width:12px;height:12px;display:block;text-decoration:none}
+.vote-see:hover{color:#000}
+/* 결과표. 조가 세로로 서고 이름이 가로로 붙는다. 가로 스크롤이 없다. */
+/* 기본 table 은 조별표용이라 min-width 700px 이 걸려 있다. 여기선 풀어야 한 화면에 든다. */
+.vres{width:100%;min-width:0;border-collapse:collapse;margin:10px 0 0}
+.vres th{width:76px;text-align:left;vertical-align:top;padding:8px 10px 8px 0;
+  font-size:11.5px;font-weight:800;letter-spacing:.02em;color:#000;
+  border-bottom:1px solid var(--hair);white-space:nowrap}
+.vres th i{font-style:normal;font-weight:500;color:var(--dim);margin-left:5px}
+.vres td{padding:8px 0;font-size:12.5px;line-height:1.7;text-align:left;border-bottom:1px solid var(--hair)}
+.vres tr.none th,.vres tr.none td{color:#b4b4b4}
+.vres tr.none th{font-weight:600}
+.vres em{font-style:normal;background:var(--acc);padding:1px 5px;font-weight:800}
+.vres td span:not(:last-child)::after{content:" / ";color:var(--hair)}
+@media (max-width:860px){
+  .vote-pick{grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}
+  .vote-pick button{font-size:11.5px;padding:7px 2px}
+}
 </style>
 </head>
 <body class="locked">
@@ -693,6 +738,7 @@ const AUTH = 'https://glab-auth.iamsoyeon316.workers.dev';
 const CK = 'glab.code', TTL = 7 * 24 * 60 * 60 * 1000;   // 7일
 let who = '', face = '';   // 카카오 닉네임과 프로필 사진. 입장코드와 같이 보관한다.
 let boss = false;          // 운영자 표시. 링크를 띄울지만 정한다. 실제 통과는 워커가 본다.
+let token = '';            // 워커가 서명한 세션 토큰. 투표할 때 신원 증명으로 쓴다.
 let sess = false;   // 게이트를 통과해 들어왔는지. 오프라인 단일 파일에선 false 다.
 const plan = await unlock();
 // 여기까지 왔으면 열쇠가 확인된 것이다. 이제야 지면을 연다.
@@ -720,12 +766,12 @@ async function unlock() {
       const v = JSON.parse(localStorage.getItem(CK));
       if (!v || !v.c) return null;
       if (Date.now() > v.e) { localStorage.removeItem(CK); return null; }
-      who = v.n || ''; face = v.p || ''; boss = !!v.a;
+      who = v.n || ''; face = v.p || ''; boss = !!v.a; token = v.k || '';
       return v.c;
     } catch (e) { return null; }
   })();
   const remember = code => {
-    try { localStorage.setItem(CK, JSON.stringify({ c: code, e: Date.now() + TTL, n: who, p: face, a: boss })); } catch (e) {}
+    try { localStorage.setItem(CK, JSON.stringify({ c: code, e: Date.now() + TTL, n: who, p: face, a: boss, k: token })); } catch (e) {}
   };
   if (saved) { try { const data = await tryCode(saved); sess = true; return data; } catch (e) {} }
 
@@ -736,6 +782,7 @@ async function unlock() {
   if (frag.get('n')) who = frag.get('n');
   if (frag.get('p')) face = frag.get('p');
   if (frag.get('a')) boss = true;
+  if (frag.get('t')) token = frag.get('t');
   if (ret.c || ret.e) history.replaceState(null, '', location.pathname + location.search);
   if (ret.c) { try { const data = await tryCode(ret.c); remember(ret.c); sess = true; return data; } catch (e) {} }
 
@@ -825,14 +872,24 @@ if (boss && AUTH) {
 
 // 요약 수치
 const raceIn = Math.round((new Date(plan.season.raceDate) - new Date(today)) / 864e5);
+// 투표를 쓰는 동안은 내 조 대신 투표 상태를 보여준다. 눌러서 투표 자리로 내려간다.
+// 투표가 꺼져 있으면(워커 미설정, 로그인 전) 원래대로 내 조를 보여준다.
+function voteFact() {
+  if (!AUTH || !token) return null;
+  // 목/일 둘 다 투표했으면 둘 다 적는다. 하나만 했으면 그 요일만.
+  const done = VDAYS.filter(([, , date]) => date).map(([d, ko]) => [ko[0], myPick(d)]).filter(x => x[1]);
+  if (!done.length) return ['조 투표', '-', '투표 전', 'factvote'];
+  return ['조 투표', done.map(x => esc(x[1])).join('/'), done.map(x => x[0]).join('/'), 'factvote'];
+}
+
 function drawFacts() {
   const g = myIdx >= 0 ? plan.groups[myIdx] : null;
   el('facts').innerHTML = [
     ['이번 주', `<mark>${upcoming.n}</mark>`, `/ ${plan.season.totalWeeks}주차`],
     ['다음 훈련', md(upcoming.thu), '목'],
     ['대회까지', raceIn, '일'],
-    ['내 조', g ? esc(g.id) : '-', g ? `10km ${esc(g.tenK)}` : '미설정'],
-  ].map(([t, v, u]) => `<div class="fact"><dt>${t}</dt><dd>${v}<s>${u}</s></dd></div>`).join('');
+    voteFact() || ['내 조', g ? esc(g.id) : '-', g ? `10km ${esc(g.tenK)}` : '미설정'],
+  ].map(([t, v, u, id]) => `<div class="fact${id ? ' tap' : ''}"${id ? ` id="${id}"` : ''}><dt>${t}</dt><dd>${v}<s>${u}</s></dd></div>`).join('');
 
   const pct = Math.round(upcoming.n / plan.season.totalWeeks * 100);
   const p = el('prog');
@@ -1221,6 +1278,7 @@ function openSheet(w, only) {
 }
 
 function closeSheet() {
+  voteOn = false;
   sheet.classList.remove('open'); scrim.classList.remove('open');
   document.body.style.overflow = '';
   if (lastFocus) lastFocus.focus();
@@ -1324,6 +1382,138 @@ function renderAll() {
   drawFacts(); drawBase(); drawMode(); drawNow(); drawCharts(); drawWeeks(open.length ? open : null);
   if (sheet.classList.contains('open') && sheetWeek) el('sheet-bd').innerHTML = body(sheetWeek, true, sheetOnly);
 }
+// ---- 조 투표 ----
+// 워커가 로그인 때 서명해 준 토큰으로 신원을 밝힌다. 페이지가 이름을 지어낼 수 없다.
+// 목/일을 따로 센다. 인터벌 조와 장거리 조가 다른 사람이 많다.
+const VOPTS = plan.groups.map(g => ({ id: g.id, sub: g.tenK })).concat({ id: '개인조깅', sub: '' });
+const VDAYS = [['thu', '목요일', upcoming.thu], ['sun', '일요일', upcoming.sun]];
+// 목/일 투표를 같이 띄우면 어느 쪽에 투표했는지 헷갈린다. 오늘 요일로 하나만 연다.
+// today 는 KST 날짜 문자열이라 UTC 자정으로 읽어야 요일이 어긋나지 않는다.
+const wd = new Date(today).getUTCDay();          // 0 일 ~ 6 토
+const VDAY = wd >= 1 && wd <= 4 ? 'thu' : 'sun'; // 월~목 → 목요일, 금~일 → 일요일
+let voteDay = VDAY;      // 링크로 다른 요일을 볼 수 있다.
+let votePick = false;    // 투표를 마치면 버튼 줄을 접는다. 바꾸기를 누르면 다시 편다.
+let votes = null, voteMe = '';
+
+const api = async (path, body) => {
+  const r = await fetch(AUTH.replace(/\/$/, '') + path, {
+    method: body ? 'POST' : 'GET',
+    headers: { authorization: 'Bearer ' + token, ...(body ? { 'content-type': 'application/json' } : {}) },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || r.status);
+  return r.json();
+};
+
+const myPick = d => (votes?.[d] ?? []).find(v => v.i === voteMe)?.g || '';
+// 받침에 따라 로/으로를 고른다. "3조로" 와 "개인조깅으로".
+const ro = w => {
+  const c = String(w).charCodeAt(String(w).length - 1) - 0xAC00;
+  const jong = c >= 0 && c <= 11171 ? c % 28 : 0;
+  return jong === 0 || jong === 8 ? '로' : '으로';   // 받침 없음 또는 ㄹ 이면 로
+};
+
+// 투표는 시트에서만 연다. 훈련 지면에 늘 펼쳐두면 번잡하다.
+let voteOn = false;   // 지금 시트가 투표를 들고 있는지
+
+function voteBody() {
+  const day = VDAYS.find(([d]) => d === voteDay);
+  if (!day || !day[2]) return '<p class="note">이 주차에는 해당 훈련이 없습니다.</p>';
+  const [d, ko] = day;
+  const picked = myPick(d);
+  const shut = picked && !votePick;      // 고르고 나면 아홉 칸이 자리를 지킬 이유가 없다
+
+  return `
+    <div class="vote-top">
+      <div class="vt mini vtabs">${VDAYS.filter(v => v[2]).map(([x, kox]) =>
+        `<button type="button" data-vd="${x}" aria-pressed="${x === d}">${kox}</button>`).join('')}</div>
+      <span class="vote-n">${votes ? `${(votes[d] || []).length}명` : '불러오는 중'}</span>
+    </div>
+    ${shut ? `<p class="vote-done"><b>${esc(picked)}</b>${ro(picked)} 투표했습니다
+        <button type="button" class="vote-see" data-edit="1">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M13.4 8a5.4 5.4 0 1 1-1.6-3.8"/><path d="M13.6 2.4v3.3h-3.3"/>
+          </svg>변경</button></p>`
+      : `<div class="vote-pick">${VOPTS.map(o => `
+          <button type="button" data-g="${esc(o.id)}" aria-pressed="${o.id === picked}">${esc(o.id)}</button>`).join('')}</div>
+        <p class="vote-msg">${picked ? `<b>${esc(picked)}</b>${ro(picked)} 투표했습니다. 다시 누르면 취소됩니다.` : '참여할 조를 고르세요.'}</p>`}
+    ${voteTable(d)}`;
+}
+
+// 결과. 조가 세로로 서고 이름이 가로로 붙는다. 가로로 긴 표는 폰에서 읽기 나쁘다.
+function voteTable(d) {
+  const list = votes?.[d] ?? [];
+  return `<table class="vres"><tbody>${VOPTS.map(o => {
+    const who = list.filter(v => v.g === o.id);
+    return `<tr class="${who.length ? '' : 'none'}">
+      <th>${esc(o.id)}${who.length ? `<i>${who.length}</i>` : ''}</th>
+      <td>${who.length
+        ? who.map(v => `<span>${v.i === voteMe ? `<em>${esc(v.n || '이름없음')}</em>` : esc(v.n || '이름없음')}</span>`).join('')
+        : '-'}</td></tr>`;
+  }).join('')}</tbody></table>`;
+}
+
+function drawVoteSheet() {
+  if (!voteOn) return;
+  const day = VDAYS.find(([d]) => d === voteDay) || VDAYS[0];
+  el('sheet-t').textContent = `${upcoming.n}주차 조 투표`;
+  el('sheet-d').textContent = day[2] ? `${md(day[2])}(${day[1][0]})` : '';
+  el('sheet-bd').innerHTML = voteBody();
+}
+
+function openVoteSheet() {
+  lastFocus = document.activeElement;
+  sheetWeek = null; sheetOnly = null; voteOn = true;
+  voteDay = VDAY; votePick = false;      // 열 때마다 오늘 요일에서 시작한다
+  drawVoteSheet();
+  sheet.classList.add('open'); scrim.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  sheet.scrollTop = 0;
+  el('sheet-x').focus();
+}
+
+// 요약 칸을 누르면 투표 시트가 열린다.
+el('facts').addEventListener('click', ev => {
+  if (ev.target.closest('#factvote')) openVoteSheet();
+});
+
+el('sheet-bd').addEventListener('click', async ev => {
+  if (!voteOn) return;
+
+  const tab = ev.target.closest('[data-vd]');
+  if (tab) { voteDay = tab.dataset.vd; votePick = false; return drawVoteSheet(); }
+  if (ev.target.closest('[data-edit]')) { votePick = true; return drawVoteSheet(); }
+
+  const btn = ev.target.closest('.vote-pick button');
+  if (!btn) return;
+  const d = voteDay;
+  const g = btn.dataset.g === myPick(d) ? null : btn.dataset.g;   // 같은 조를 다시 누르면 취소
+  el('sheet-bd').querySelectorAll('button').forEach(b => { b.disabled = true; });
+  try {
+    votes = (await api('/vote', { w: upcoming.n, d, g })).votes;
+    votePick = false;   // 방금 골랐으니 접는다
+  } catch (e) {
+    const msg = el('sheet-bd').querySelector('.vote-msg');
+    if (msg) msg.innerHTML = '<b>투표를 보내지 못했습니다</b> 다시 눌러주세요';
+    el('sheet-bd').querySelectorAll('button').forEach(b => { b.disabled = false; });
+    return;
+  }
+  drawVoteSheet();
+  drawFacts();
+});
+
+if (AUTH && token) {
+  api('/votes?w=' + upcoming.n)
+    .then(r => { voteMe = r.me; votes = r.votes; drawVoteSheet(); drawFacts(); })
+    .catch(() => {
+      const msg = el('sheet-bd').querySelector('.vote-msg');
+      if (msg) msg.innerHTML = '<b>투표 현황을 불러오지 못했습니다</b>';
+    });
+}
+
+
+
 renderAll();
 
 // 이번 주 훈련 이미지 공유.
@@ -1411,6 +1601,7 @@ el('viewmode').addEventListener('click', e => {
 
 // 조 선택 시트에서 고르기
 el('sheet-bd').addEventListener('click', e => {
+  if (voteOn) return;
   const go = e.target.closest('#shotgo');
   if (go) { makeShot(go); return; }
   const p = e.target.closest('[data-pick]');

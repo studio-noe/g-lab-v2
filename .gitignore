@@ -9,3 +9,6 @@ glab.html
 
 # wrangler 로컬 캐시
 .wrangler/
+
+# wrangler 로컬 개발용 값
+.dev.vars
