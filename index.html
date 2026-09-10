@@ -1385,7 +1385,7 @@ function renderAll() {
 // ---- 조 투표 ----
 // 워커가 로그인 때 서명해 준 토큰으로 신원을 밝힌다. 페이지가 이름을 지어낼 수 없다.
 // 목/일을 따로 센다. 인터벌 조와 장거리 조가 다른 사람이 많다.
-const VOPTS = plan.groups.map(g => ({ id: g.id, sub: g.tenK })).concat({ id: '개인조깅', sub: '' });
+const VOPTS = plan.groups.map(g => ({ id: g.id, sub: g.tenK })).concat({ id: '조깅', sub: '' });
 const VDAYS = [['thu', '목요일', upcoming.thu], ['sun', '일요일', upcoming.sun]];
 // 목/일 투표를 같이 띄우면 어느 쪽에 투표했는지 헷갈린다. 오늘 요일로 하나만 연다.
 // today 는 KST 날짜 문자열이라 UTC 자정으로 읽어야 요일이 어긋나지 않는다.
