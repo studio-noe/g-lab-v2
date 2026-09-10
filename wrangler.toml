@@ -9,3 +9,10 @@ SITE = "https://studio-noe.github.io/g-lab-v2/"
 [[kv_namespaces]]
 binding = "LOGINS"
 id = "05bcdf17777e4415ad8883d65b89a0ce"
+
+# 훈련 후기. 여러 방향으로 꺼내 봐야 해서 KV 대신 D1 을 쓴다.
+# ponytail: 로컬 개발용 자리표시 id. 배포 전에 `npx wrangler d1 create glab` 으로 받은 id 로 바꾼다.
+[[d1_databases]]
+binding = "DB"
+database_name = "glab"
+database_id = "00000000-0000-0000-0000-000000000000"

@@ -10,10 +10,29 @@ const KV = () => {
     get: async (k, t) => (m.has(k) ? (t === 'json' ? JSON.parse(m.get(k)) : m.get(k)) : null),
     put: async (k, v, o) => { m.set(k, v); if (o?.metadata) meta.set(k, o.metadata); },
     delete: async k => { m.delete(k); meta.delete(k); },
+    getWithMetadata: async k => ({ value: m.get(k) ?? null, metadata: meta.get(k) ?? null }),
     list: async (o) => ({
       keys: [...m.keys()].filter(n => !o?.prefix || n.startsWith(o.prefix))
         .map(name => ({ name, metadata: meta.get(name) })),
     }),
+  };
+};
+
+// D1 흉내. 워커가 쓰는 쿼리 네 가지만 알아듣는다.
+const DB = () => {
+  const rows = [];
+  return {
+    rows,
+    prepare: sql => ({ bind: (...a) => ({
+      run: async () => {
+        const [week, day, uid, name, grp, lane, cond, done, body, at] = a;
+        const r = { week, day, uid, name, grp, lane, cond, done, body, at };
+        const i = rows.findIndex(x => x.week === week && x.day === day && x.uid === uid);
+        i < 0 ? rows.push(r) : (rows[i] = r);
+      },
+      first: async () => rows.find(x => x.week === a[0] && x.day === a[1] && x.uid === a[2]) ?? null,
+      all: async () => ({ results: rows.filter(x => x.week === a[0] && x.day === a[1]) }),
+    }) }),
   };
 };
 
@@ -25,7 +44,7 @@ const go = (path, env, fake = kakao) => {
   return worker.fetch(new Request('https://auth.test' + path), env);
 };
 const env = () => ({ KAKAO_REST_KEY: 'KEY', ENTRY_CODE: '9876', SITE: 'https://x.test/g/',
-  SESSION_KEY: 'test-key', LOGINS: KV() });
+  SESSION_KEY: 'test-key', LOGINS: KV(), DB: DB() });
 const loc = r => r.headers.get('location');
 
 let e = env();
@@ -120,5 +139,35 @@ assert.equal(v.votes.sun.length, 0);
 e.ADMIN_IDS = '7';
 const ah = await (await go('/cb?code=abc&state=admin', e)).text();
 assert.match(ah, /1명/);
+
+
+// ---- 훈련 후기 ----
+e.ADMIN_IDS = '';
+const fb = (path, body, tok) => call(path, body
+  ? { method: 'POST', body: JSON.stringify(body), token: tok } : { token: tok });
+
+// 토큰 없으면 막히고, 컨디션이나 소화가 빠지면 받지 않는다.
+assert.equal((await fb('/feedback?w=12&d=thu', null, '')).status, 401);
+assert.equal((await fb('/feedback', { w: 12, d: 'thu', done: '완주' })).status, 400);
+
+// 저장하고 다시 쓰면 덮어쓴다. 한 사람 한 훈련에 하나다.
+await call('/vote', { method: 'POST', body: JSON.stringify({ w: 12, d: 'thu', g: '3조' }) });
+let f = await (await fb('/feedback', { w: 12, d: 'thu', grp: '3조', lane: '안쪽', cond: '중', done: '완주', body: '무난' })).json();
+assert.equal(f.mine.cond, '중');
+await fb('/feedback', { w: 12, d: 'thu', grp: '3조', lane: '엉뚱', cond: '하', done: '일부', body: '발목' });
+assert.equal(e.DB.rows.length, 1);
+assert.equal(e.DB.rows[0].cond, '하');
+assert.equal(e.DB.rows[0].lane, '');          // 모르는 레인 값은 버린다
+
+// 내 후기를 열면 그날 투표한 조가 같이 온다.
+f = await (await fb('/feedback?w=12&d=thu')).json();
+assert.equal(f.mine.body, '발목');
+assert.equal(f.grp, '3조');
+
+// 전체 후기는 운영자만.
+assert.equal((await fb('/feedback/all?w=12&d=thu')).status, 403);
+e.ADMIN_IDS = '7';
+f = await (await fb('/feedback/all?w=12&d=thu')).json();
+assert.equal(f.rows.length, 1);
 
 console.log('worker.test.mjs 통과');

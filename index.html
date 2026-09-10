@@ -555,6 +555,35 @@ body.locked .wrap,body.locked .sheet,body.locked .scrim{display:none}
 .vres tr.none th{font-weight:600}
 .vres em{font-style:normal;background:var(--acc);padding:1px 5px;font-weight:800}
 .vres td span:not(:last-child)::after{content:" / ";color:var(--hair)}
+/* ---- 훈련 후기 ----
+   시트 머리가 탭이 된다. 고른 쪽만 검고 나머지는 흐리다. */
+.sheet-hd h3 .ptab{appearance:none;background:none;border:0;padding:0;margin:0 14px 0 0;
+  font:inherit;color:#c4c4c4;cursor:pointer}
+.sheet-hd h3 .ptab[aria-pressed="true"]{color:#000}
+.fb-hd{margin:2px 0 14px;font-size:13px}
+.fb-hd b{font-weight:800}
+.fb-hd span{color:var(--dim);margin-left:8px}
+.fb-row{display:flex;align-items:center;gap:12px;margin:0 0 10px}
+.fb-row > span{flex:none;width:44px;font-size:11px;letter-spacing:.04em;color:var(--dim)}
+.fb-row select{font:inherit;font-size:13px;padding:5px 8px;border:1px solid var(--hair);background:var(--paper);border-radius:0}
+.fb textarea{display:block;width:100%;box-sizing:border-box;min-height:96px;margin:6px 0 0;padding:10px 12px;
+  border:1px solid var(--hair);border-radius:0;font:inherit;font-size:13px;line-height:1.6;resize:vertical}
+.fb textarea:focus{outline:0;border-color:#000}
+.fb-foot{display:flex;align-items:center;gap:12px;margin:10px 0 0}
+.fb-foot .vote-msg{margin:0}
+.fb-save{appearance:none;border:0;background:#000;color:#fff;font:inherit;font-size:12.5px;font-weight:800;
+  padding:9px 20px;cursor:pointer}
+.fb-save:disabled{opacity:.5;cursor:default}
+.fb-all{margin:28px 0 0;padding-top:16px;border-top:2px solid #000}
+.fb-all h4{margin:0 0 14px;font-size:13px;font-weight:800}
+.fb-all h4 i,.fbg h5 i{font-style:normal;font-weight:500;font-size:11px;color:var(--dim);margin-left:8px}
+.fbg{margin:0 0 16px}
+.fbg h5{margin:0;padding-bottom:6px;font-size:12px;font-weight:800;border-bottom:1px solid var(--hair)}
+.fbi{padding:7px 0 9px;border-bottom:1px solid #f0f0f0;font-size:12.5px}
+.fbi b{font-weight:800;margin-right:8px}
+.fbi span{font-size:11.5px;color:var(--dim)}
+.fbi em{font-style:normal;font-size:10px;font-weight:800;background:#e00;color:#fff;padding:1px 5px;margin-left:8px}
+.fbi p{margin:4px 0 0;line-height:1.6;white-space:pre-wrap}
 @media (max-width:860px){
   .vote-pick{grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}
   .vote-pick button{font-size:11.5px;padding:7px 2px}
@@ -1433,7 +1462,92 @@ const ro = w => {
 };
 
 // 투표는 시트에서만 연다. 훈련 지면에 늘 펼쳐두면 번잡하다.
-let voteOn = false;   // 지금 시트가 투표를 들고 있는지
+let voteOn = false;   // 지금 시트가 투표/후기를 들고 있는지
+let panel = 'vote';   // 시트 머리 탭. vote | fb
+
+// ---- 훈련 후기 ----
+// 지난 훈련 최근 3회까지 쓴다. 월요일이면 이번주 탭이 넘어가 버려서, 탭에 묶으면
+// 일요일 장거리 후기를 쓸 틈이 하루뿐이다. 그래서 날짜 기준으로 따로 뽑는다.
+const FCOND = ['상', '중', '하'], FDONE = ['완주', '일부', '중단'];
+const SESS = plan.weeks.flatMap(w => [
+  { w: w.n, d: 'thu', date: w.thu, name: w.label || w.type },
+  ...(w.sun ? [{ w: w.n, d: 'sun', date: w.sun, name: '장거리' }] : []),
+]).filter(x => x.date <= today).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 3);
+let fbAt = 0;               // SESS 중 지금 보는 훈련
+const fbCache = {};         // 'w:d' → { mine, grp, all }
+
+const kstAt = iso => {
+  const [ymd, hm] = new Date(iso).toLocaleString('sv-SE', { timeZone: 'Asia/Seoul' }).split(' ');
+  const [, m, d] = ymd.split('-');
+  return `${+m}/${+d} ${hm.slice(0, 5)}`;
+};
+
+// ponytail: 통증은 낱말로만 잡는다. 놓치는 표현이 보이면 여기 낱말을 더한다.
+const PAIN = /통증|아프|아팠|부상|무릎|발목|햄스트링|종아리|정강|허리|골반|족저|쥐/;
+
+function fbBody() {
+  if (!SESS.length) return '<p class="note">아직 지난 훈련이 없습니다.</p>';
+  const x = SESS[fbAt], c = fbCache[`${x.w}:${x.d}`];
+  const tabs = `<div class="vote-top"><div class="vt mini vtabs">${SESS.map((y, i) =>
+    `<button type="button" data-fs="${i}" aria-pressed="${i === fbAt}">${md(y.date)} ${y.d === 'thu' ? '목' : '일'}</button>`
+  ).join('')}</div></div>`;
+  if (!c) return tabs + '<p class="vote-msg">불러오는 중</p>';
+  if (c.err) return tabs + '<p class="vote-msg"><b>후기를 불러오지 못했습니다</b></p>';
+
+  const m = c.mine || {};
+  const grp = m.grp || c.grp;
+  const seg = (key, opts) => `<div class="vt mini" data-f="${key}">${opts.map(o =>
+    `<button type="button" data-v="${o}" aria-pressed="${o === m[key]}">${o}</button>`).join('')}</div>`;
+  return tabs + `
+    <form class="fb" id="fbform">
+      <p class="fb-hd"><b>${esc(x.name)}</b><span>${grp ? esc(grp) : '조 미투표'}</span></p>
+      ${grp ? '' : `<div class="fb-row"><span>조</span><select name="grp">${['', ...VOPTS.map(o => o.id)]
+        .map(g => `<option value="${esc(g)}">${g ? esc(g) : '선택'}</option>`).join('')}</select></div>`}
+      ${x.d === 'thu' ? `<div class="fb-row"><span>레인</span>${seg('lane', ['안쪽', '외곽'])}</div>` : ''}
+      <div class="fb-row"><span>컨디션</span>${seg('cond', FCOND)}</div>
+      <div class="fb-row"><span>소화</span>${seg('done', FDONE)}</div>
+      <textarea name="body" maxlength="1000"
+        placeholder="자세, 통증, 호흡, 사점, 소감. 안 써도 됩니다.">${esc(m.body || '')}</textarea>
+      <div class="fb-foot"><button type="submit" class="fb-save">저장</button>
+        <span class="vote-msg" id="fbmsg">${m.at ? `${kstAt(m.at)} 저장됨` : '운영진과 나만 봅니다'}</span></div>
+    </form>
+    ${boss ? fbAll(c.all) : ''}`;
+}
+
+// 운영진용. 조별로 묶고 컨디션과 소화를 숫자로 줄인다. 카톡을 스크롤하며 읽지 않아도 된다.
+function fbAll(all) {
+  if (!all) return '<div class="fb-all"><h4>전체 후기</h4><p class="vote-msg">불러오지 못했습니다</p></div>';
+  const rows = all.rows || [];
+  const tally = (rs, k, opts) => opts.map(o => [o, rs.filter(r => r[k] === o).length])
+    .filter(([, n]) => n).map(([o, n]) => o + n).join(' ');
+  const groups = [...VOPTS.map(o => o.id), ''].map(g => [g, rows.filter(r => (r.grp || '') === g)])
+    .filter(([, rs]) => rs.length);
+  return `<div class="fb-all"><h4>전체 후기<i>${rows.length}명 / 투표 ${all.votes}명</i></h4>
+    ${groups.map(([g, rs]) => `<div class="fbg">
+      <h5>${g ? esc(g) : '조 미상'}<i>${tally(rs, 'cond', FCOND)} / ${tally(rs, 'done', FDONE)}</i></h5>
+      ${rs.map(r => `<div class="fbi"><b>${esc(r.name || '이름없음')}</b><span>${
+        [r.lane, r.cond, r.done].filter(Boolean).map(esc).join(' ')}</span>${
+        PAIN.test(r.body || '') ? '<em>통증</em>' : ''}${
+        r.body ? `<p>${esc(r.body)}</p>` : ''}</div>`).join('')}
+    </div>`).join('') || '<p class="vote-msg">아직 후기가 없습니다.</p>'}
+  </div>`;
+}
+
+async function fbLoad() {
+  const x = SESS[fbAt];
+  if (!x || fbCache[`${x.w}:${x.d}`]) return;
+  const q = `?w=${x.w}&d=${x.d}`;
+  try {
+    const [mine, all] = await Promise.all([
+      api('/feedback' + q),
+      boss ? api('/feedback/all' + q).catch(() => null) : null,   // 운영자 표시가 낡았으면 조용히 빠진다
+    ]);
+    fbCache[`${x.w}:${x.d}`] = { ...mine, all };
+  } catch (e) {
+    fbCache[`${x.w}:${x.d}`] = { err: true };
+  }
+  if (voteOn && panel === 'fb') drawVoteSheet();
+}
 
 function voteBody() {
   const day = VDAYS.find(([d]) => d === voteDay);
@@ -1475,15 +1589,21 @@ function voteTable(d) {
 
 function drawVoteSheet() {
   if (!voteOn) return;
+  el('sheet-t').innerHTML = [['vote', '조 투표'], ['fb', '후기']].map(([p, t]) =>
+    `<button type="button" class="ptab" data-panel="${p}" aria-pressed="${p === panel}">${t}</button>`).join('');
+  if (panel === 'fb') {
+    el('sheet-d').textContent = '';
+    el('sheet-bd').innerHTML = fbBody();
+    return;
+  }
   const day = VDAYS.find(([d]) => d === voteDay) || VDAYS[0];
-  el('sheet-t').textContent = `${upcoming.n}주차 조 투표`;
-  el('sheet-d').textContent = day[2] ? `${md(day[2])}(${day[1][0]})` : '';
+  el('sheet-d').textContent = `${upcoming.n}주차` + (day[2] ? ` / ${md(day[2])}(${day[1][0]})` : '');
   el('sheet-bd').innerHTML = voteBody();
 }
 
-function openVoteSheet() {
+function openVoteSheet(p = 'vote') {
   lastFocus = document.activeElement;
-  sheetWeek = null; sheetOnly = null; voteOn = true;
+  sheetWeek = null; sheetOnly = null; voteOn = true; panel = p;
   voteDay = VDAY; votePick = false;      // 열 때마다 오늘 요일에서 시작한다
   drawVoteSheet();
   sheet.classList.add('open'); scrim.classList.add('open');
@@ -1497,8 +1617,50 @@ el('facts').addEventListener('click', ev => {
   if (ev.target.closest('#factvote')) openVoteSheet();
 });
 
+el('sheet-t').addEventListener('click', ev => {
+  const p = ev.target.closest('[data-panel]');
+  if (!p || !voteOn) return;
+  panel = p.dataset.panel;
+  drawVoteSheet();
+  if (panel === 'fb') fbLoad();
+});
+
+// 후기 저장. 컨디션과 소화만 고르면 글은 비워도 된다.
+el('sheet-bd').addEventListener('submit', async ev => {
+  if (!voteOn || panel !== 'fb') return;
+  ev.preventDefault();
+  const f = ev.target, x = SESS[fbAt], k = `${x.w}:${x.d}`, c = fbCache[k];
+  const pick = key => f.querySelector(`[data-f="${key}"] [aria-pressed="true"]`)?.dataset.v || '';
+  const body = {
+    w: x.w, d: x.d,
+    grp: f.elements.grp ? f.elements.grp.value : (c.mine?.grp || c.grp || ''),
+    lane: pick('lane'), cond: pick('cond'), done: pick('done'),
+    body: f.elements.body.value.trim(),
+  };
+  const msg = el('fbmsg'), btn = f.querySelector('.fb-save');
+  if (!body.cond || !body.done) { msg.innerHTML = '<b>컨디션과 소화는 골라주세요</b>'; return; }
+  btn.disabled = true;
+  msg.textContent = '저장하는 중';
+  try {
+    const r = await api('/feedback', body);
+    c.mine = r.mine;
+    if (c.all) c.all.rows = (c.all.rows || []).filter(y => y.uid !== r.mine.uid).concat(r.mine);
+    drawVoteSheet();
+  } catch (e) {
+    btn.disabled = false;
+    msg.innerHTML = '<b>저장하지 못했습니다</b> 다시 눌러주세요';
+  }
+});
+
 el('sheet-bd').addEventListener('click', async ev => {
   if (!voteOn) return;
+  if (panel === 'fb') {
+    const fs = ev.target.closest('[data-fs]');
+    if (fs) { fbAt = Number(fs.dataset.fs); drawVoteSheet(); fbLoad(); return; }
+    const chip = ev.target.closest('[data-f] button');
+    if (chip) chip.parentElement.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b === chip));
+    return;
+  }
 
   const tab = ev.target.closest('[data-vd]');
   if (tab) { voteDay = tab.dataset.vd; votePick = false; return drawVoteSheet(); }

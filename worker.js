@@ -5,6 +5,8 @@
 //                 이때 입장코드와 함께 서명한 세션 토큰을 같이 넘긴다.
 //   GET  /votes   주차별 조 투표 현황. 세션 토큰이 있어야 한다.
 //   POST /vote    내 조 투표. 누구인지는 토큰의 서명으로 안다.
+//   GET  /feedback      내 후기와 그날 투표한 조.   POST /feedback  후기 저장
+//   GET  /feedback/all  한 훈련의 전체 후기. 운영자만.
 //   GET  /admin   허용된 카카오 id 에게만 접속 기록을 보여준다.
 //
 // 왜 토큰이 필요한가.
@@ -14,7 +16,7 @@
 //
 // 시크릿 : KAKAO_REST_KEY, KAKAO_CLIENT_SECRET(안 켰으면 생략), ENTRY_CODE, ADMIN_IDS, SESSION_KEY
 // 변수   : SITE (돌아갈 페이지 주소)
-// 저장소 : LOGINS (KV)
+// 저장소 : LOGINS (KV), DB (D1, schema.sql)
 //   접속 기록  <카카오 id>            → { n 닉네임, f 첫 접속, l 마지막 접속, c 횟수 }
 //   조 투표    v:<주차>:<thu|sun>:<id> → 값은 비우고 메타데이터에 { n 닉네임, g 조, t 시각 }
 //              메타데이터를 쓰면 list 한 번으로 전원 투표를 읽는다. get 을 사람 수만큼 돌지 않는다.
@@ -69,6 +71,7 @@ const json = (env, req, data, status = 200) => new Response(JSON.stringify(data)
   { status, headers: { 'content-type': 'application/json; charset=utf-8', ...cors(env, req) } });
 
 const back = (env, frag) => Response.redirect(env.SITE + '#' + frag, 302);
+const admins = env => (env.ADMIN_IDS ?? '').split(',').map(s => s.trim()).filter(Boolean);
 
 const authorize = (env, redirect_uri, state) =>
   // ponytail: state 를 위조 방지용이 아니라 돌아갈 곳 표시로만 쓴다. 통과해도 상대가 얻는 건
@@ -109,9 +112,53 @@ async function readVotes(env, week) {
   return out;
 }
 
+// ---- 훈련 후기 ----
+// 본인과 운영진만 본다. 통증이나 부상 얘기가 섞이니 공개 범위를 좁게 둔다.
+const COND = ['상', '중', '하'], DONE = ['완주', '일부', '중단'], LANE = ['안쪽', '외곽'];
+
+async function feedback(env, req, url, who) {
+  if (req.method === 'POST') {
+    const b = await req.json().catch(() => ({}));
+    const w = Number(b.w), d = b.d;
+    if (!w || !DAYS.includes(d) || !COND.includes(b.cond) || !DONE.includes(b.done)) {
+      return json(env, req, { error: 'bad' }, 400);
+    }
+    const row = {
+      week: w, day: d, uid: who.i, name: who.n,
+      grp: String(b.grp ?? '').slice(0, 20),
+      lane: LANE.includes(b.lane) ? b.lane : '',
+      cond: b.cond, done: b.done,
+      body: String(b.body ?? '').slice(0, 1000),
+      at: new Date().toISOString(),
+    };
+    await env.DB.prepare(`INSERT INTO feedback (week, day, uid, name, grp, lane, cond, done, body, at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT (week, day, uid) DO UPDATE SET name = excluded.name, grp = excluded.grp,
+        lane = excluded.lane, cond = excluded.cond, done = excluded.done, body = excluded.body, at = excluded.at`)
+      .bind(row.week, row.day, row.uid, row.name, row.grp, row.lane, row.cond, row.done, row.body, row.at).run();
+    return json(env, req, { ok: true, mine: row });
+  }
+
+  const w = Number(url.searchParams.get('w')), d = url.searchParams.get('d');
+  if (!w || !DAYS.includes(d)) return json(env, req, { error: 'bad' }, 400);
+
+  if (url.pathname === '/feedback/all') {
+    if (!admins(env).includes(who.i)) return json(env, req, { error: 'admin' }, 403);
+    const { results } = await env.DB.prepare('SELECT * FROM feedback WHERE week = ? AND day = ? ORDER BY at')
+      .bind(w, d).all();
+    const { keys } = await env.LOGINS.list({ prefix: `v:${w}:${d}:` });
+    return json(env, req, { rows: results, votes: keys.length });
+  }
+
+  // 내 후기와, 그날 투표한 조. 조는 후기 폼에 미리 채운다.
+  const mine = await env.DB.prepare('SELECT * FROM feedback WHERE week = ? AND day = ? AND uid = ?')
+    .bind(w, d, who.i).first();
+  const v = await env.LOGINS.getWithMetadata(`v:${w}:${d}:${who.i}`);
+  return json(env, req, { mine: mine ?? null, grp: v?.metadata?.g ?? '' });
+}
+
 async function admin(env, me) {
-  const ok = (env.ADMIN_IDS ?? '').split(',').map(s => s.trim()).filter(Boolean);
-  if (!ok.includes(String(me.id))) {
+  if (!admins(env).includes(String(me.id))) {
     // 처음 여는 사람은 여기서 자기 id 를 확인해 ADMIN_IDS 에 넣는다.
     return page(`<p style="font:15px/1.6 system-ui;padding:24px">권한이 없습니다.<br>
       내 카카오 id : <b>${esc(me.id)}</b></p>`, 403);
@@ -154,9 +201,10 @@ export default {
     if (url.pathname === '/admin') return authorize(env, redirect_uri, 'admin');
 
     // ---- 조 투표 ----
-    if (url.pathname === '/votes' || url.pathname === '/vote') {
+    if (['/votes', '/vote', '/feedback', '/feedback/all'].includes(url.pathname)) {
       const who = await verify(env, (req.headers.get('authorization') ?? '').replace(/^Bearer /, ''));
       if (!who) return json(env, req, { error: 'auth' }, 401);
+      if (url.pathname.startsWith('/feedback')) return feedback(env, req, url, who);
 
       if (url.pathname === '/votes') {
         const week = Number(url.searchParams.get('w'));
@@ -214,7 +262,7 @@ export default {
 
       const p = me.properties ?? {};
       // 운영자면 표시만 넘긴다. 진짜 통과 여부는 /admin 에서 다시 본다.
-      const boss = (env.ADMIN_IDS ?? '').split(',').map(x => x.trim()).includes(String(me.id));
+      const boss = admins(env).includes(String(me.id));
       return back(env, 'c=' + encodeURIComponent(env.ENTRY_CODE) +
         '&n=' + encodeURIComponent(p.nickname ?? '') +
         '&p=' + encodeURIComponent(p.thumbnail_image ?? p.profile_image ?? '') +
