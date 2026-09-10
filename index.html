@@ -879,7 +879,7 @@ function voteFact() {
   const done = VDAYS.filter(([, , date]) => date).map(([d, ko]) => [ko[0], myPick(d)]).filter(x => x[1]);
   if (!done.length) return ['조 투표', '-', '투표 전', 'factvote'];
   const gs = [...new Set(done.map(x => x[1]))];   // 목/일이 같은 조면 한 번만 적는다
-  return ['조 투표', gs.map(esc).join('/'), done.map(x => x[0]).join('/'), 'factvote'];
+  return ['✅ 조 투표', gs.map(esc).join('/'), done.map(x => x[0]).join('/'), 'factvote'];
 }
 
 function drawFacts() {
