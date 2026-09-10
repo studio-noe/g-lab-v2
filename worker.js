@@ -167,12 +167,16 @@ export default {
       const { w, d, g } = await req.json().catch(() => ({}));
       if (!Number(w) || !DAYS.includes(d)) return json(env, req, { error: 'bad' }, 400);
       const k = `v:${Number(w)}:${d}:${who.i}`;
-      if (g) {
-        await env.LOGINS.put(k, '', { metadata: { n: who.n, g: String(g).slice(0, 20), t: new Date().toISOString() } });
-      } else {
-        await env.LOGINS.delete(k);   // 조를 비우면 투표 취소다
-      }
-      return json(env, req, { ok: true, votes: await readVotes(env, Number(w)) });
+      const mine = g ? { n: who.n, g: String(g).slice(0, 20), t: new Date().toISOString() } : null;
+      if (mine) await env.LOGINS.put(k, '', { metadata: mine });
+      else await env.LOGINS.delete(k);   // 조를 비우면 투표 취소다
+
+      // KV 는 쓰고 바로 읽으면 이전 값이 나온다. 목록을 그대로 돌려주면 방금 누른 게
+      // 없던 일이 되어 화면이 되돌아간다. 그래서 내 칸만 응답에 직접 얹는다.
+      const votes = await readVotes(env, Number(w));
+      votes[d] = votes[d].filter(v => v.i !== who.i);
+      if (mine) votes[d].push({ i: who.i, ...mine });
+      return json(env, req, { ok: true, votes });
     }
 
     if (url.pathname === '/cb') {

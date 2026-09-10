@@ -1490,6 +1490,8 @@ el('sheet-bd').addEventListener('click', async ev => {
   const d = voteDay;
   const g = btn.dataset.g === myPick(d) ? null : btn.dataset.g;   // 같은 조를 다시 누르면 취소
   el('sheet-bd').querySelectorAll('button').forEach(b => { b.disabled = true; });
+  const wait = el('sheet-bd').querySelector('.vote-msg');
+  if (wait) wait.textContent = '보내는 중';
   try {
     votes = (await api('/vote', { w: upcoming.n, d, g })).votes;
     votePick = false;   // 방금 골랐으니 접는다
