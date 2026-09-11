@@ -888,12 +888,11 @@ const mine = () => (mode === 'mine' && myIdx >= 0 ? myIdx : -1);
 // 이번 주 목/일 표는 그날 투표한 조를 따른다. 목요일 S조, 일요일 2조처럼 갈릴 수 있어서
 // 내 조 하나로 둘 다 덮으면 안 된다. 조깅을 골랐으면 그날은 전체 조를 보여주고,
 // 투표가 없는 요일이나 다른 주차는 내 조를 쓴다.
-const mineOn = (w, d) => {
-  if (mode !== 'mine') return -1;
-  const p = w === upcoming ? myPick(d) : '';
-  if (p) return plan.groups.findIndex(g => g.id === p);   // 조깅이면 -1
-  return mine();
+const dayIdx = d => {
+  const p = myPick(d);
+  return p ? plan.groups.findIndex(g => g.id === p) : myIdx;   // 조깅이면 -1
 };
+const mineOn = (w, d) => mode !== 'mine' ? -1 : w === upcoming ? dayIdx(d) : mine();
 const stage = plan.stageOf[upcoming.type] || '';
 
 const TEAM = `<b>[G-LAB]</b> ${esc(c.parentFull)} 훈련팀`;
@@ -944,9 +943,9 @@ function drawFacts() {
     ['이번 주', `<mark>${upcoming.n}</mark>`, `/ ${plan.season.totalWeeks}주차`],
     ['다음 훈련', md(upcoming.thu), '목'],
     ['대회까지', raceIn, '일'],
-    voteFact() || ['내 조', g ? esc(g.id) : '-', g ? `10km ${esc(g.tenK)}` : '미설정'],
+    voteFact() || ['내 조', g ? esc(g.id) : '-', g ? `10km ${esc(g.tenK)}` : '미설정', 'factpick', 'done'],
   ].map(([t, v, u, id, st]) => `<div class="fact${id ? ` tap ${st}` : ''}"${id
-    ? ` id="${id}" role="button" tabindex="0" aria-label="조 투표 열기"` : ''}><dt>${t}</dt><dd>${v}${
+    ? ` id="${id}" role="button" tabindex="0" aria-label="${id === 'factvote' ? '조 투표 열기' : '내 조 고르기'}"` : ''}><dt>${t}</dt><dd>${v}${
     u ? `<s>${u}</s>` : ''}</dd></div>`).join('');
 
   const pct = Math.round(upcoming.n / plan.season.totalWeeks * 100);
@@ -1336,7 +1335,7 @@ function openSheet(w, only) {
 }
 
 function closeSheet() {
-  voteOn = false;
+  voteOn = false; pickOn = false;
   sheet.classList.remove('open'); scrim.classList.remove('open');
   document.body.style.overflow = '';
   if (lastFocus) lastFocus.focus();
@@ -1424,16 +1423,36 @@ function drawMode() {
   b[1].innerHTML = label ? `<b>${label}</b><i>&#9656;</i>` : '내 조<i>&#9656;</i>';
 }
 
+// 투표 한 건. 내 조도 그 조로 맞춘다. 조깅이나 취소면 내 조는 그대로 둔다.
+async function sendVote(d, g) {
+  const r = await api('/vote', { w: upcoming.n, d, g });
+  myVotes[d] = g;
+  votes = keepMine(r.votes);
+  const gi = plan.groups.findIndex(x => x.id === g);
+  if (gi >= 0) pickGroup(gi);
+}
+
+// 조 선택 화면. 투표를 쓰는 사람은 위에 목/일 탭이 붙고, 고르면 그날 투표가 된다.
+// 내 조와 투표를 따로 두면 서로 덮어써서, 고르는 곳은 달라도 저장은 투표 하나로 한다.
+let pickOn = false, pickDay = 'thu';
+function pickBody() {
+  const voting = AUTH && token;
+  const cur = voting ? dayIdx(pickDay) : myIdx;
+  return (voting ? `<div class="vote-top"><div class="vt mini vtabs">${VDAYS.filter(v => v[2]).map(([x, ko]) =>
+      `<button type="button" data-pd="${x}" aria-pressed="${x === pickDay}">${ko}</button>`).join('')}</div></div>` : '')
+    + plan.groups.map((g, i) =>
+      `<button type="button" class="pick" data-pick="${i}" aria-pressed="${i === cur}">
+         <b>${esc(g.id)}</b><span>10km ${esc(g.tenK)}</span><em>${esc(g.goal)}</em>
+       </button>`).join('')
+    + '<p class="note" id="picknote">애매하면 아래 조에서 시작해 올라오기</p>';
+}
+
 function openPicker() {
   lastFocus = document.activeElement;
-  sheetWeek = null;
+  sheetWeek = null; pickOn = true; pickDay = VDAY;
   el('sheet-t').textContent = '내 조 선택';
   el('sheet-d').textContent = '10km 기록 기준';
-  el('sheet-bd').innerHTML = plan.groups.map((g, i) =>
-    `<button type="button" class="pick" data-pick="${i}" aria-pressed="${i === myIdx}">
-       <b>${esc(g.id)}</b><span>10km ${esc(g.tenK)}</span><em>${esc(g.goal)}</em>
-     </button>`).join('')
-    + '<p class="note">애매하면 아래 조에서 시작해 올라오기</p>';
+  el('sheet-bd').innerHTML = pickBody();
   sheet.classList.add('open'); scrim.classList.add('open');
   document.body.style.overflow = 'hidden';
   sheet.scrollTop = 0;
@@ -1648,10 +1667,13 @@ function openVoteSheet(p = 'vote') {
 
 // 요약 칸을 누르면 투표 시트가 열린다.
 el('facts').addEventListener('keydown', ev => {
-  if ((ev.key === 'Enter' || ev.key === ' ') && ev.target.id === 'factvote') { ev.preventDefault(); openVoteSheet(); }
+  if (ev.key !== 'Enter' && ev.key !== ' ') return;
+  if (ev.target.id === 'factvote') { ev.preventDefault(); openVoteSheet(); }
+  if (ev.target.id === 'factpick') { ev.preventDefault(); openPicker(); }
 });
 el('facts').addEventListener('click', ev => {
   if (ev.target.closest('#factvote')) openVoteSheet();
+  if (ev.target.closest('#factpick')) openPicker();
 });
 
 el('sheet-t').addEventListener('click', ev => {
@@ -1710,13 +1732,9 @@ el('sheet-bd').addEventListener('click', async ev => {
   el('sheet-bd').querySelectorAll('button').forEach(b => { b.disabled = true; });
   const wait = el('sheet-bd').querySelector('.vote-msg');
   if (wait) wait.textContent = '보내는 중';
-  const gi = plan.groups.findIndex(x => x.id === g);
   try {
-    const r = await api('/vote', { w: upcoming.n, d, g });
-    myVotes[d] = g;
-    votes = keepMine(r.votes);
+    await sendVote(d, g);
     votePick = false;   // 방금 골랐으니 접는다
-    if (gi >= 0) pickGroup(gi);
   } catch (e) {
     const msg = el('sheet-bd').querySelector('.vote-msg');
     if (msg) msg.innerHTML = '<b>투표를 보내지 못했습니다</b> 다시 눌러주세요';
@@ -1819,7 +1837,12 @@ el('now').addEventListener('click', e => { if (e.target.closest('#share')) openS
 el('viewmode').addEventListener('click', e => {
   const b = e.target.closest('[data-m]');
   if (!b) return;
-  if (b.dataset.m === 'all') { mode = 'all'; store.set(MK, mode); renderAll(); }
+  if (b.dataset.m === 'all') { mode = 'all'; store.set(MK, mode); renderAll(); return; }
+  // 내 조는 이제 투표한 조다. 조를 바꾸는 길은 투표 하나로 모은다.
+  // 전체 보기에서 누르면 내 조 보기로 돌아가고, 이미 내 조 보기면 투표 시트를 연다.
+  // 투표를 못 하는 사람(다시 로그인 전)만 예전 조 선택 시트를 쓴다.
+  const has = myIdx >= 0 || VDAYS.some(([d]) => myPick(d));
+  if (mode !== 'mine' && has) { mode = 'mine'; store.set(MK, mode); renderAll(); }
   else openPicker();
 });
 
@@ -1835,11 +1858,25 @@ el('sheet-bd').addEventListener('click', e => {
   if (voteOn) return;
   const go = e.target.closest('#shotgo');
   if (go) { makeShot(go); return; }
+  const pd = e.target.closest('[data-pd]');
+  if (pd) { pickDay = pd.dataset.pd; el('sheet-bd').innerHTML = pickBody(); return; }
   const p = e.target.closest('[data-pick]');
   if (!p) return;
-  pickGroup(Number(p.dataset.pick));
-  closeSheet();
-  renderAll();
+  if (!(AUTH && token)) {                // 투표를 못 하는 사람은 예전처럼 내 조만 바꾸고 닫는다
+    pickGroup(Number(p.dataset.pick));
+    closeSheet();
+    renderAll();
+    return;
+  }
+  // 투표로 저장한다. 목/일을 이어서 고를 수 있게 시트는 열어둔다.
+  const bd = el('sheet-bd');
+  bd.querySelectorAll('button').forEach(b => { b.disabled = true; });
+  sendVote(pickDay, plan.groups[Number(p.dataset.pick)].id)
+    .then(() => { renderAll(); if (pickOn) bd.innerHTML = pickBody(); })
+    .catch(() => {
+      bd.querySelectorAll('button').forEach(b => { b.disabled = false; });
+      el('picknote').innerHTML = '<b>저장하지 못했습니다</b> 다시 눌러주세요';
+    });
 });
 
 // 카드 안의 "전체 조 보기"
