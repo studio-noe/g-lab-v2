@@ -42,3 +42,5 @@ node worker.test.mjs
 | `worker.js` `worker.test.mjs` `wrangler.toml` | worker |
 | `og.*` `gate.*` `icon-src.png` | assets |
 | `design.html` `DESIGN.md` | design reference |
+
+Built with Claude Code.
