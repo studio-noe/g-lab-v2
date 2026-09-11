@@ -1444,6 +1444,9 @@ function pickBody() {
       `<button type="button" class="pick" data-pick="${i}" aria-pressed="${i === cur}">
          <b>${esc(g.id)}</b><span>10km ${esc(g.tenK)}</span><em>${esc(g.goal)}</em>
        </button>`).join('')
+    // 조깅은 조가 아니라서 투표할 때만 있다. 고르면 그날 표는 전체 조로 보인다.
+    + (voting ? `<button type="button" class="pick" data-pick="jog" aria-pressed="${myPick(pickDay) === '조깅'}">
+         <b>조깅</b><span>개인 조깅</span><em></em></button>` : '')
     + '<p class="note" id="picknote">애매하면 아래 조에서 시작해 올라오기</p>';
 }
 
@@ -1871,7 +1874,7 @@ el('sheet-bd').addEventListener('click', e => {
   // 투표로 저장한다. 목/일을 이어서 고를 수 있게 시트는 열어둔다.
   const bd = el('sheet-bd');
   bd.querySelectorAll('button').forEach(b => { b.disabled = true; });
-  sendVote(pickDay, plan.groups[Number(p.dataset.pick)].id)
+  sendVote(pickDay, p.dataset.pick === 'jog' ? '조깅' : plan.groups[Number(p.dataset.pick)].id)
     .then(() => { renderAll(); if (pickOn) bd.innerHTML = pickBody(); })
     .catch(() => {
       bd.querySelectorAll('button').forEach(b => { b.disabled = false; });
