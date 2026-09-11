@@ -1413,8 +1413,10 @@ const reduce = matchMedia('(prefers-reduced-motion: reduce)');
 // 헤더 토글. '내 조'는 누르면 조 선택 시트를 연다.
 function drawMode() {
   const g = myIdx >= 0 ? plan.groups[myIdx] : null;
-  const wk = [...new Set(VDAYS.map(([d]) => myPick(d)).filter(x => plan.groups.some(y => y.id === x)))];
-  const label = wk.length ? wk.map(esc).join('/') : g ? esc(g.id) : '';
+  // 버튼은 지금 표에 보이는 그대로 적는다. 요일마다 투표한 조(조깅 포함)를 쓰고,
+  // 투표가 없는 요일만 내 조로 채운다. 조깅을 옛 내 조로 덮어 적으면 표와 버튼이 어긋난다.
+  const wk = [...new Set(VDAYS.filter(([, , date]) => date).map(([d]) => myPick(d) || (g ? g.id : '')).filter(Boolean))];
+  const label = wk.map(esc).join('/');
   const b = el('viewmode').querySelectorAll('button');
   b[0].setAttribute('aria-pressed', mode === 'all');
   b[1].setAttribute('aria-pressed', mode === 'mine');
