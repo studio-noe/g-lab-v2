@@ -99,6 +99,7 @@ section{margin:58px 0 0}
 .vt.mini[hidden]{display:none}
 .vt.mini button{padding:6px 13px;font-size:12px}
 .vt.mini button b{font-weight:800;margin-left:6px}
+.vt.mini button b:first-child{margin-left:0}
 .vt.mini button i{font-style:normal;margin-left:5px;font-size:10px;color:inherit}
 .pick{display:flex;align-items:baseline;gap:12px;width:100%;text-align:left;
  appearance:none;background:none;border:0;border-bottom:1px solid var(--hair);
@@ -525,8 +526,21 @@ body.locked .wrap,body.locked .sheet,body.locked .scrim{display:none}
 .vote-done{margin:2px 0 0;font-size:12.5px;color:var(--dim)}
 .vote-done b{color:#000;font-weight:800;background:var(--acc);padding:1px 6px;margin-right:2px}
 .vote-done .vote-see{margin:0 0 0 10px}
-.fact.tap{cursor:pointer}
-.fact.tap:hover dd{text-decoration:underline;text-underline-offset:4px}
+.fact.tap{position:relative;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .12s}
+.fact.tap:focus-visible{outline:2px solid #000;outline-offset:-2px}
+/* 투표 전 : 배경은 두지 않고 화살표가 오른쪽으로 계속 밀어서 눈을 끈다 */
+.fact.tap.todo dd{font-size:clamp(17px,2.6vw,26px)}
+.fact.tap.todo dd .arr{width:2.3em;height:.6em;margin-left:.4em;vertical-align:.05em;
+  animation:nudge 1.8s cubic-bezier(.35,0,.25,1) infinite}
+.fact.tap.todo:hover dd .arr{animation:none;transform:translateX(8px);transition:transform .15s}
+.fact.tap.todo:active{background:#f4f4f4}
+@keyframes nudge{0%,24%,46%,100%{transform:translateX(0)}12%{transform:translateX(7px)}34%{transform:translateX(4px)}}
+@media (prefers-reduced-motion:reduce){.fact.tap.todo dd .arr{animation:none}}
+/* 투표 후 : 흰 칸으로 돌아오고 오른쪽 화살표만 남는다 */
+.fact.tap.done::after{content:"";position:absolute;right:20px;top:50%;width:7px;height:7px;
+  border-right:1.5px solid var(--dim);border-bottom:1.5px solid var(--dim);transform:translateY(-50%) rotate(-45deg)}
+.fact.tap.done:hover dd{text-decoration:underline;text-underline-offset:4px}
+.fact.tap.done:active{background:#f4f4f4}
 /* PC 는 한 줄에 아홉, 폰은 두 줄로 5+4 다. */
 .vote-pick{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:6px}
 .vote-pick button{appearance:none;background:none;border:1px solid var(--hair);
@@ -871,6 +885,15 @@ if (myIdx < 0) {
   if (myIdx >= 0 && store.get(MK) === 'mine') mode = 'mine';
 }
 const mine = () => (mode === 'mine' && myIdx >= 0 ? myIdx : -1);
+// 이번 주 목/일 표는 그날 투표한 조를 따른다. 목요일 S조, 일요일 2조처럼 갈릴 수 있어서
+// 내 조 하나로 둘 다 덮으면 안 된다. 조깅을 골랐으면 그날은 전체 조를 보여주고,
+// 투표가 없는 요일이나 다른 주차는 내 조를 쓴다.
+const mineOn = (w, d) => {
+  if (mode !== 'mine') return -1;
+  const p = w === upcoming ? myPick(d) : '';
+  if (p) return plan.groups.findIndex(g => g.id === p);   // 조깅이면 -1
+  return mine();
+};
 const stage = plan.stageOf[upcoming.type] || '';
 
 const TEAM = `<b>[G-LAB]</b> ${esc(c.parentFull)} 훈련팀`;
@@ -906,9 +929,13 @@ function voteFact() {
   if (!AUTH || !token) return null;
   // 목/일 둘 다 투표했으면 둘 다 적는다. 하나만 했으면 그 요일만.
   const done = VDAYS.filter(([, , date]) => date).map(([d, ko]) => [ko[0], myPick(d)]).filter(x => x[1]);
-  if (!done.length) return ['조 투표', '-', '투표 전', 'factvote'];
+  if (!done.length) {
+    return ['조 투표', `투표하기<svg class="arr" viewBox="0 0 46 12" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="square" aria-hidden="true"><path d="M1 6h43"/><path d="M38.5 1.5 44 6l-5.5 4.5"/></svg>`,
+      '', 'factvote', 'todo'];
+  }
   const gs = [...new Set(done.map(x => x[1]))];   // 목/일이 같은 조면 한 번만 적는다
-  return ['✅ 조 투표', gs.map(esc).join('/'), done.map(x => x[0]).join('/'), 'factvote'];
+  return ['✅ 조 투표', gs.map(esc).join('/'), done.map(x => x[0]).join('/'), 'factvote', 'done'];
 }
 
 function drawFacts() {
@@ -918,7 +945,9 @@ function drawFacts() {
     ['다음 훈련', md(upcoming.thu), '목'],
     ['대회까지', raceIn, '일'],
     voteFact() || ['내 조', g ? esc(g.id) : '-', g ? `10km ${esc(g.tenK)}` : '미설정'],
-  ].map(([t, v, u, id]) => `<div class="fact${id ? ' tap' : ''}"${id ? ` id="${id}"` : ''}><dt>${t}</dt><dd>${v}<s>${u}</s></dd></div>`).join('');
+  ].map(([t, v, u, id, st]) => `<div class="fact${id ? ` tap ${st}` : ''}"${id
+    ? ` id="${id}" role="button" tabindex="0" aria-label="조 투표 열기"` : ''}><dt>${t}</dt><dd>${v}${
+    u ? `<s>${u}</s>` : ''}</dd></div>`).join('');
 
   const pct = Math.round(upcoming.n / plan.season.totalWeeks * 100);
   const p = el('prog');
@@ -1064,7 +1093,7 @@ function longBlock(w) {
       <h3><b>일요일</b><span>${esc(w.long)}</span></h3>
       ${!lt ? '' : `
         <ul class="rules">${lt.intro.map(t => `<li>${esc(t)}</li>`).join('')}</ul>
-        ${mine() >= 0 ? longMine(lt, mine()) : longTable(lt)}
+        ${mineOn(w, 'sun') >= 0 ? longMine(lt, mineOn(w, 'sun')) : longTable(lt)}
         <p class="note">${esc(lt.note)}</p>`}
     </div>`;
 }
@@ -1087,9 +1116,9 @@ const body = (w, withRace, only) => {
     ${only === 'l' ? '' : `<div class="blk">
       <h3><b>목요일</b><span>트랙 ${esc(t ? t.label : w.type)}</span></h3>
       ${t && t.rules ? `<ul class="rules">${t.rules.map(r => `<li>${esc(r)}</li>`).join('')}</ul>` : ''}
-      ${!t ? '<p class="long">조별표 미정. 훈련 포맷 확정 후 반영</p>' : mine() >= 0 ? mineCard(t, mine()) : renderTable(t)}
+      ${!t ? '<p class="long">조별표 미정. 훈련 포맷 확정 후 반영</p>' : mineOn(w, 'thu') >= 0 ? mineCard(t, mineOn(w, 'thu')) : renderTable(t)}
       ${t && t.derived ? '<p class="note warn">아래 수치는 실제 배포표가 아니라 조별 기준 페이스에서 계산한 추정치</p>' : ''}
-      ${t && mine() >= 0 ? '<a class="allview" data-all="1" role="button" tabindex="0">전체 조 보기</a>' : ''}
+      ${t && mineOn(w, 'thu') >= 0 ? '<a class="allview" data-all="1" role="button" tabindex="0">전체 조 보기</a>' : ''}
     </div>`}
     ${only === 't' ? '' : longBlock(w)}`;
 };
@@ -1384,10 +1413,13 @@ const reduce = matchMedia('(prefers-reduced-motion: reduce)');
 // 헤더 토글. '내 조'는 누르면 조 선택 시트를 연다.
 function drawMode() {
   const g = myIdx >= 0 ? plan.groups[myIdx] : null;
+  const wk = [...new Set(VDAYS.map(([d]) => myPick(d)).filter(x => plan.groups.some(y => y.id === x)))];
+  const label = wk.length ? wk.map(esc).join('/') : g ? esc(g.id) : '';
   const b = el('viewmode').querySelectorAll('button');
   b[0].setAttribute('aria-pressed', mode === 'all');
   b[1].setAttribute('aria-pressed', mode === 'mine');
-  b[1].innerHTML = g ? `내 조<b>${esc(g.id)}</b><i>&#9656;</i>` : '내 조<i>&#9656;</i>';
+  // 조를 골랐으면 '내 조' 는 빼고 조만 적는다. S조/2조 처럼 길어지면 버튼이 넘친다
+  b[1].innerHTML = label ? `<b>${label}</b><i>&#9656;</i>` : '내 조<i>&#9656;</i>';
 }
 
 function openPicker() {
@@ -1613,6 +1645,9 @@ function openVoteSheet(p = 'vote') {
 }
 
 // 요약 칸을 누르면 투표 시트가 열린다.
+el('facts').addEventListener('keydown', ev => {
+  if ((ev.key === 'Enter' || ev.key === ' ') && ev.target.id === 'factvote') { ev.preventDefault(); openVoteSheet(); }
+});
 el('facts').addEventListener('click', ev => {
   if (ev.target.closest('#factvote')) openVoteSheet();
 });
@@ -1673,11 +1708,13 @@ el('sheet-bd').addEventListener('click', async ev => {
   el('sheet-bd').querySelectorAll('button').forEach(b => { b.disabled = true; });
   const wait = el('sheet-bd').querySelector('.vote-msg');
   if (wait) wait.textContent = '보내는 중';
+  const gi = plan.groups.findIndex(x => x.id === g);
   try {
     const r = await api('/vote', { w: upcoming.n, d, g });
     myVotes[d] = g;
     votes = keepMine(r.votes);
     votePick = false;   // 방금 골랐으니 접는다
+    if (gi >= 0) pickGroup(gi);
   } catch (e) {
     const msg = el('sheet-bd').querySelector('.vote-msg');
     if (msg) msg.innerHTML = '<b>투표를 보내지 못했습니다</b> 다시 눌러주세요';
@@ -1685,12 +1722,12 @@ el('sheet-bd').addEventListener('click', async ev => {
     return;
   }
   drawVoteSheet();
-  drawFacts();
+  renderAll();   // 요일마다 투표한 조로 훈련표를 다시 그린다
 });
 
 if (AUTH && token) {
   api('/votes?w=' + upcoming.n)
-    .then(r => { voteMe = r.me; votes = keepMine(r.votes); drawVoteSheet(); drawFacts(); })
+    .then(r => { voteMe = r.me; votes = keepMine(r.votes); renderAll(); drawVoteSheet(); })
     .catch(() => {
       const msg = el('sheet-bd').querySelector('.vote-msg');
       if (msg) msg.innerHTML = '<b>투표 현황을 불러오지 못했습니다</b>';
@@ -1785,16 +1822,20 @@ el('viewmode').addEventListener('click', e => {
 });
 
 // 조 선택 시트에서 고르기
+function pickGroup(i) {
+  myIdx = i;
+  mode = 'mine';
+  store.set(GK, plan.groups[i].id);
+  store.set(MK, mode);
+}
+
 el('sheet-bd').addEventListener('click', e => {
   if (voteOn) return;
   const go = e.target.closest('#shotgo');
   if (go) { makeShot(go); return; }
   const p = e.target.closest('[data-pick]');
   if (!p) return;
-  myIdx = Number(p.dataset.pick);
-  mode = 'mine';
-  store.set(GK, plan.groups[myIdx].id);
-  store.set(MK, mode);
+  pickGroup(Number(p.dataset.pick));
   closeSheet();
   renderAll();
 });
