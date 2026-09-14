@@ -188,7 +188,7 @@ ol.chain li b{font-weight:700;margin-right:3px}
 
 /* ---- 주석 ---- */
 .note{border-left:3px solid var(--acc);padding:2px 0 2px 16px;margin:14px 0 0;
- font-size:13.5px;color:#333;max-width:74ch}
+ font-size:13.5px;color:#333;max-width:74ch;word-break:keep-all}
 .note b{font-weight:700;color:#000}
 .note.warn{border-left-color:#000}
 
@@ -391,7 +391,14 @@ footer{margin:72px 0 0;border-top:2px solid #000;padding-top:14px;font-size:11.5
 .by{display:inline-flex;align-items:center;gap:6px;color:var(--dim);font-weight:700;
  font-size:11.5px;text-decoration:none}
 .by:hover{color:#000}
-.by svg{width:14px;height:14px;display:block}
+/* 푸터 링크. 계정 이름 뒤에 오픈채팅방과 같은 작은 화살표 */
+.ft-l,.ft-r{display:inline-flex;align-items:center;flex-wrap:wrap;gap:4px 16px}
+.ft-l>span{display:inline-flex;align-items:center;gap:5px}
+.fl{display:inline-flex;align-items:center;gap:2px;color:var(--dim);font-weight:700;text-decoration:none}
+.fl svg{width:10px;height:10px;display:block}
+.fl:hover{color:#000}
+.ft-r{gap:4px 6px}
+.ft-r .by{margin-right:8px}
 
 @media (max-width:860px){
   .wrap{padding:0 18px 64px}
@@ -489,9 +496,10 @@ body.locked .wrap,body.locked .sheet,body.locked .scrim{display:none}
   font:inherit;font-size:15px;font-weight:800;letter-spacing:-.01em;text-decoration:none}
 .gate .kakao svg{width:18px;height:18px}
 .gate .kakao:hover{background:#ffd900}
-.gate .foot{margin:34px 0 0;padding-top:12px;border-top:1px solid rgba(255,255,255,.22);text-align:right}
-.gate .foot .by{color:#fff;opacity:.5}
-.gate .foot .by:hover{opacity:1}
+.gate .foot{margin:34px 0 0;padding-top:12px;border-top:1px solid rgba(255,255,255,.22);font-size:11.5px;
+ color:rgba(255,255,255,.5);display:flex;flex-wrap:wrap;gap:6px 16px;justify-content:space-between;align-items:center}
+.gate .foot .fl{color:inherit}
+.gate .foot .fl:hover{color:#fff}
 
 /* ---- 페이스 계산기 ----
    처방은 1레인 400m 기준인데 실제로는 바깥 레인에서 뛴다. 그 차이를 직접 넣어 본다.
@@ -602,13 +610,11 @@ body.locked .wrap,body.locked .sheet,body.locked .scrim{display:none}
     </form>
     <p class="err" id="gatee" role="status" aria-live="polite"></p>
     <p class="foot">
-      <a class="by" href="https://www.instagram.com/_noe.noe.noe_/" target="_blank" rel="noopener">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <rect x="2.5" y="2.5" width="19" height="19" rx="5.5"/>
-          <circle cx="12" cy="12" r="4.4"/>
-          <circle cx="17.6" cy="6.4" r="1.3" fill="currentColor" stroke="none"/>
-        </svg>_noe.noe.noe_
-      </a>
+      <span class="ft-l">
+        <span>구파발천러닝크루 <a class="fl" href="https://www.instagram.com/gsrc_runcrew/" target="_blank" rel="noopener">@gsrc_runcrew<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="square" aria-hidden="true"><path d="M4 10 10.3 3.7"/><path d="M5.2 3.7h5.1v5.1"/></svg></a></span>
+        <span>G-LAB <a class="fl" href="https://www.instagram.com/g.lab.gsrc/" target="_blank" rel="noopener">@g.lab.gsrc<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="square" aria-hidden="true"><path d="M4 10 10.3 3.7"/><path d="M5.2 3.7h5.1v5.1"/></svg></a></span>
+      </span>
+      <span class="ft-r">제작 <a class="fl" href="https://www.instagram.com/_noe.noe.noe_/" target="_blank" rel="noopener">@_noe.noe.noe_<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="square" aria-hidden="true"><path d="M4 10 10.3 3.7"/><path d="M5.2 3.7h5.1v5.1"/></svg></a></span>
     </p>
   </div>
 </div>
@@ -710,15 +716,13 @@ body.locked .wrap,body.locked .sheet,body.locked .scrim{display:none}
 </section>
 
 <footer>
-  <span id="f1"></span>
-  <a class="by" id="adminlink" href="#" hidden>Admin</a>
-  <a class="by" href="https://www.instagram.com/_noe.noe.noe_/" target="_blank" rel="noopener">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-      <rect x="2.5" y="2.5" width="19" height="19" rx="5.5"/>
-      <circle cx="12" cy="12" r="4.4"/>
-      <circle cx="17.6" cy="6.4" r="1.3" fill="currentColor" stroke="none"/>
-    </svg>_noe.noe.noe_
-  </a>
+  <span class="ft-l">
+    <span>구파발천러닝크루 <a class="fl" href="https://www.instagram.com/gsrc_runcrew/" target="_blank" rel="noopener">@gsrc_runcrew<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="square" aria-hidden="true"><path d="M4 10 10.3 3.7"/><path d="M5.2 3.7h5.1v5.1"/></svg></a></span>
+    <span>G-LAB <a class="fl" href="https://www.instagram.com/g.lab.gsrc/" target="_blank" rel="noopener">@g.lab.gsrc<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="square" aria-hidden="true"><path d="M4 10 10.3 3.7"/><path d="M5.2 3.7h5.1v5.1"/></svg></a></span>
+  </span>
+  <span class="ft-r"><a class="by" id="adminlink" href="#" hidden>Admin</a>
+    제작 <a class="fl" href="https://www.instagram.com/_noe.noe.noe_/" target="_blank" rel="noopener">@_noe.noe.noe_<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="square" aria-hidden="true"><path d="M4 10 10.3 3.7"/><path d="M5.2 3.7h5.1v5.1"/></svg></a>
+  </span>
 </footer>
 </div>
 
@@ -892,7 +896,6 @@ if (sess) {
     location.reload();
   });
 }
-el('f1').innerHTML = TEAM;
 if (boss && AUTH) {
   el('adminlink').href = AUTH.replace(/\/$/, '') + '/admin';
   el('adminlink').hidden = false;
