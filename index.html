@@ -242,6 +242,9 @@ ul.rules li{position:relative;padding-left:13px;margin-bottom:5px}
 ul.rules li:last-child{margin-bottom:0}
 ul.rules li::before{content:"";position:absolute;left:0;top:.62em;
  width:3px;height:3px;background:#b6b6b6}
+/* 운영진 자료의 강조를 옮긴 것. 회색 본문 사이에서 검게 튀게 한다. */
+ul.rules b,p.note b{color:#000;font-weight:800}
+ul.rules mark,p.note mark{background:var(--acc);color:#000;font-weight:800;padding:0 3px}
 
 /* ---- 전체 일정 ---- */
 details{border-bottom:1px solid var(--hair)}
@@ -542,7 +545,7 @@ body.locked .wrap,body.locked .sheet,body.locked .scrim{display:none}
 .fact.tap.done:hover dd{text-decoration:underline;text-underline-offset:4px}
 .fact.tap.done:active{background:#f4f4f4}
 /* PC 는 한 줄에 아홉, 폰은 두 줄로 5+4 다. */
-.vote-pick{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:6px}
+.vote-pick{display:grid;grid-template-columns:repeat(var(--n,9),minmax(0,1fr));gap:6px}
 .vote-pick button{appearance:none;background:none;border:1px solid var(--hair);
   font:inherit;font-size:12.5px;font-weight:700;padding:7px 4px;cursor:pointer;
   line-height:1.3;white-space:nowrap}
@@ -599,7 +602,7 @@ body.locked .wrap,body.locked .sheet,body.locked .scrim{display:none}
 .fbi em{font-style:normal;font-size:10px;font-weight:800;background:#e00;color:#fff;padding:1px 5px;margin-left:8px}
 .fbi p{margin:4px 0 0;line-height:1.6;white-space:pre-wrap}
 @media (max-width:860px){
-  .vote-pick{grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}
+  .vote-pick{grid-template-columns:repeat(var(--m,5),minmax(0,1fr));gap:5px}
   .vote-pick button{font-size:11.5px;padding:7px 2px}
 }
 </style>
@@ -888,9 +891,13 @@ const mine = () => (mode === 'mine' && myIdx >= 0 ? myIdx : -1);
 // 이번 주 목/일 표는 그날 투표한 조를 따른다. 목요일 S조, 일요일 2조처럼 갈릴 수 있어서
 // 내 조 하나로 둘 다 덮으면 안 된다. 조깅을 골랐으면 그날은 전체 조를 보여주고,
 // 투표가 없는 요일이나 다른 주차는 내 조를 쓴다.
+// 이번 주는 투표한 것만 따른다. 투표 안 한 요일을 옛 내 조로 채우면 요약 칸, 버튼, 표가 어긋난다.
+// 투표를 못 하는 사람(다시 로그인 전)만 예전처럼 내 조를 쓴다.
+const voting = () => !!(AUTH && token);
 const dayIdx = d => {
+  if (!voting()) return myIdx;
   const p = myPick(d);
-  return p ? plan.groups.findIndex(g => g.id === p) : myIdx;   // 조깅이면 -1
+  return p ? plan.groups.findIndex(g => g.id === p) : -1;   // 조깅이나 투표 전이면 -1 (전체 표)
 };
 const mineOn = (w, d) => mode !== 'mine' ? -1 : w === upcoming ? dayIdx(d) : mine();
 const stage = plan.stageOf[upcoming.type] || '';
@@ -1049,8 +1056,50 @@ const seqStr = s => s.seq.join('');
 
 // 장거리. 회전 페이스는 "450" = 4'50" 표기로 들어온다.
 const mmss = v => `${v.slice(0, -2)}'${v.slice(-2)}"`;
+// **굵게** 와 ==형광펜== 만 받는다. 먼저 이스케이프하고 표시만 바꾸니 다른 태그는 못 들어온다.
+const rich = t => esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/==(.+?)==/g, '<mark>$1</mark>');
 const runKm = (lt, g) => Math.round(lt.loop * (g.laps.length - (g.half ? 0.5 : 0)) * 10) / 10;
 const nth = (lt, g, k) => (g.half && k === g.laps.length - 1) ? '0.5회전' : `${k + 1}회전`;
+
+// 훈련에 따라 조를 따로 나누는 날이 있다 (9/20 여의도는 S조~10조 11개).
+// 그런 훈련은 groups 가 id 를 갖고, 회전을 구간(segs)으로 적는다. [회전 수, km 페이스]
+const ownGroups = lt => !!(lt && lt.groups.length && lt.groups[0].id);
+const segLaps = x => x.segs.reduce((a, [n]) => a + n, 0);
+const segKm = (lt, x) => Math.round(lt.loop * segLaps(x) * 10) / 10;
+const segRange = (x, k) => {
+  const a = x.segs.slice(0, k).reduce((t, [n]) => t + n, 0);
+  return `${a + 1}~${a + x.segs[k][0]}회전`;
+};
+
+function segTable(lt) {
+  return tbl('<th>조</th><th>10km</th><th>1~10회전</th><th>11회전~</th><th>평균</th><th>총거리</th><th>대상</th>',
+    lt.groups.map(x => `<tr><td>${esc(x.id)}</td><td class="pl">${esc(x.tenK)}</td>`
+      + x.segs.map(([, v], k) => cell(mmss(v), k ? segRange(x, k) : '')).join('')
+      + cell(mmss(x.avg), '/km') + cell(segKm(lt, x) + 'km', segLaps(x) + '회전')
+      + `<td class="pl">${esc(x.who)}</td></tr>`).join(''));
+}
+
+function segMine(lt, x) {
+  const k = x.segs.length - 1;
+  return `<div class="mine-hd"><h4>${esc(x.id)}</h4>
+      <span>10km ${esc(x.tenK)} / ${esc(x.who)}</span></div>
+    <dl class="facts three">
+      <div class="fact"><dt>총거리</dt><dd>${segKm(lt, x)}km<s>${segLaps(x)}회전</s></dd></div>
+      <div class="fact"><dt>평균</dt><dd>${mmss(x.avg)}<s>/km</s></dd></div>
+      <div class="fact"><dt>마무리</dt><dd>${mmss(x.segs[k][1])}<s>${segRange(x, k)}</s></dd></div>
+    </dl>
+    <dl class="info">
+      ${x.segs.map(([, v], i) => `<div><dt>${segRange(x, i)}</dt><dd>${mmss(v)} <span>/km</span></dd></div>`).join('')}
+      <div><dt>대상</dt><dd>${esc(x.who)}</dd></div>
+    </dl>`;
+}
+
+// 자기 조 목록을 가진 훈련에서 내 조는 이름으로 찾는다. 8조~10조는 사이트 기본 조에 없다.
+const sunPickId = w => {
+  if (mode !== 'mine') return '';
+  if (w === upcoming && voting()) return myPick('sun');
+  return myIdx >= 0 ? plan.groups[myIdx].id : '';
+};
 
 function longTable(lt) {
   const max = Math.max(...lt.groups.map(g => g.laps.length));
@@ -1091,9 +1140,11 @@ function longBlock(w) {
     <div class="blk">
       <h3><b>일요일</b><span>${esc(w.long)}</span></h3>
       ${!lt ? '' : `
-        <ul class="rules">${lt.intro.map(t => `<li>${esc(t)}</li>`).join('')}</ul>
-        ${mineOn(w, 'sun') >= 0 ? longMine(lt, mineOn(w, 'sun')) : longTable(lt)}
-        <p class="note">${esc(lt.note)}</p>`}
+        <ul class="rules">${lt.intro.map(t => `<li>${rich(t)}</li>`).join('')}</ul>
+        ${ownGroups(lt)
+          ? ((x => x ? segMine(lt, x) : segTable(lt))(lt.groups.find(g => g.id === sunPickId(w))))
+          : mineOn(w, 'sun') >= 0 ? longMine(lt, mineOn(w, 'sun')) : longTable(lt)}
+        <p class="note">${rich(lt.note)}</p>`}
     </div>`;
 }
 
@@ -1114,7 +1165,7 @@ const body = (w, withRace, only) => {
     ${withRace && w.race ? `<p class="rcline"><b>대회</b>${esc(w.race)}</p>` : ''}
     ${only === 'l' ? '' : `<div class="blk">
       <h3><b>목요일</b><span>트랙 ${esc(t ? t.label : w.type)}</span></h3>
-      ${t && t.rules ? `<ul class="rules">${t.rules.map(r => `<li>${esc(r)}</li>`).join('')}</ul>` : ''}
+      ${t && t.rules ? `<ul class="rules">${t.rules.map(r => `<li>${rich(r)}</li>`).join('')}</ul>` : ''}
       ${!t ? '<p class="long">조별표 미정. 훈련 포맷 확정 후 반영</p>' : mineOn(w, 'thu') >= 0 ? mineCard(t, mineOn(w, 'thu')) : renderTable(t)}
       ${t && t.derived ? '<p class="note warn">아래 수치는 실제 배포표가 아니라 조별 기준 페이스에서 계산한 추정치</p>' : ''}
       ${t && mineOn(w, 'thu') >= 0 ? '<a class="allview" data-all="1" role="button" tabindex="0">전체 조 보기</a>' : ''}
@@ -1414,7 +1465,8 @@ function drawMode() {
   const g = myIdx >= 0 ? plan.groups[myIdx] : null;
   // 버튼은 지금 표에 보이는 그대로 적는다. 요일마다 투표한 조(조깅 포함)를 쓰고,
   // 투표가 없는 요일만 내 조로 채운다. 조깅을 옛 내 조로 덮어 적으면 표와 버튼이 어긋난다.
-  const wk = [...new Set(VDAYS.filter(([, , date]) => date).map(([d]) => myPick(d) || (g ? g.id : '')).filter(Boolean))];
+  const wk = [...new Set(VDAYS.filter(([, , date]) => date)
+    .map(([d]) => voting() ? myPick(d) : (g ? g.id : '')).filter(Boolean))];
   const label = wk.map(esc).join('/');
   const b = el('viewmode').querySelectorAll('button');
   b[0].setAttribute('aria-pressed', mode === 'all');
@@ -1440,10 +1492,15 @@ function pickBody() {
   const cur = voting ? dayIdx(pickDay) : myIdx;
   return (voting ? `<div class="vote-top"><div class="vt mini vtabs">${VDAYS.filter(v => v[2]).map(([x, ko]) =>
       `<button type="button" data-pd="${x}" aria-pressed="${x === pickDay}">${ko}</button>`).join('')}</div></div>` : '')
-    + plan.groups.map((g, i) =>
-      `<button type="button" class="pick" data-pick="${i}" aria-pressed="${i === cur}">
-         <b>${esc(g.id)}</b><span>10km ${esc(g.tenK)}</span><em>${esc(g.goal)}</em>
-       </button>`).join('')
+    + (voting && pickDay === 'sun' && ownGroups(sunLt())
+      ? sunLt().groups.map(x =>
+        `<button type="button" class="pick" data-pid="${esc(x.id)}" aria-pressed="${myPick('sun') === x.id}">
+           <b>${esc(x.id)}</b><span>10km ${esc(x.tenK)}</span><em>${esc(x.who)}</em>
+         </button>`).join('')
+      : plan.groups.map((g, i) =>
+        `<button type="button" class="pick" data-pick="${i}" aria-pressed="${i === cur}">
+           <b>${esc(g.id)}</b><span>10km ${esc(g.tenK)}</span><em>${esc(g.goal)}</em>
+         </button>`).join(''))
     // 조깅은 조가 아니라서 투표할 때만 있다. 고르면 그날 표는 전체 조로 보인다.
     + (voting ? `<button type="button" class="pick" data-pick="jog" aria-pressed="${myPick(pickDay) === '조깅'}">
          <b>조깅</b><span>개인 조깅</span><em></em></button>` : '')
@@ -1471,6 +1528,11 @@ function renderAll() {
 // 워커가 로그인 때 서명해 준 토큰으로 신원을 밝힌다. 페이지가 이름을 지어낼 수 없다.
 // 목/일을 따로 센다. 인터벌 조와 장거리 조가 다른 사람이 많다.
 const VOPTS = plan.groups.map(g => ({ id: g.id, sub: g.tenK })).concat({ id: '조깅', sub: '' });
+// 그날 훈련이 자기 조 목록을 가지면 투표도 그 조로 받는다.
+const sunLt = () => upcoming.longType && plan.longTypes[upcoming.longType];
+const vopts = d => d === 'sun' && ownGroups(sunLt())
+  ? sunLt().groups.map(x => ({ id: x.id, sub: x.tenK })).concat({ id: '조깅', sub: '' })
+  : VOPTS;
 const VDAYS = [['thu', '목요일', upcoming.thu], ['sun', '일요일', upcoming.sun]];
 // 목/일 투표를 같이 띄우면 어느 쪽에 투표했는지 헷갈린다. 오늘 요일로 하나만 연다.
 // today 는 KST 날짜 문자열이라 UTC 자정으로 읽어야 요일이 어긋나지 않는다.
@@ -1624,7 +1686,7 @@ function voteBody() {
                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M13.4 8a5.4 5.4 0 1 1-1.6-3.8"/><path d="M13.6 2.4v3.3h-3.3"/>
           </svg>변경</button></p>`
-      : `<div class="vote-pick">${VOPTS.map(o => `
+      : `<div class="vote-pick" style="--n:${vopts(d).length > 9 ? Math.ceil(vopts(d).length / 2) : vopts(d).length};--m:${Math.ceil(vopts(d).length / 2)}">${vopts(d).map(o => `
           <button type="button" data-g="${esc(o.id)}" aria-pressed="${o.id === picked}">${esc(o.id)}</button>`).join('')}</div>
         <p class="vote-msg">${picked ? `<b>${esc(picked)}</b>${ro(picked)} 투표했습니다. 다시 누르면 취소됩니다.` : '참여할 조를 고르세요.'}</p>`}
     ${voteTable(d)}`;
@@ -1633,7 +1695,7 @@ function voteBody() {
 // 결과. 조가 세로로 서고 이름이 가로로 붙는다. 가로로 긴 표는 폰에서 읽기 나쁘다.
 function voteTable(d) {
   const list = votes?.[d] ?? [];
-  return `<table class="vres"><tbody>${VOPTS.map(o => {
+  return `<table class="vres"><tbody>${vopts(d).map(o => {
     const who = list.filter(v => v.g === o.id);
     return `<tr class="${who.length ? '' : 'none'}">
       <th>${esc(o.id)}${who.length ? `<i>${who.length}</i>` : ''}</th>
@@ -1844,7 +1906,7 @@ el('viewmode').addEventListener('click', e => {
   // 내 조는 이제 투표한 조다. 조를 바꾸는 길은 투표 하나로 모은다.
   // 전체 보기에서 누르면 내 조 보기로 돌아가고, 이미 내 조 보기면 투표 시트를 연다.
   // 투표를 못 하는 사람(다시 로그인 전)만 예전 조 선택 시트를 쓴다.
-  const has = myIdx >= 0 || VDAYS.some(([d]) => myPick(d));
+  const has = voting() ? VDAYS.some(([d]) => myPick(d)) : myIdx >= 0;
   if (mode !== 'mine' && has) { mode = 'mine'; store.set(MK, mode); renderAll(); }
   else openPicker();
 });
@@ -1863,7 +1925,7 @@ el('sheet-bd').addEventListener('click', e => {
   if (go) { makeShot(go); return; }
   const pd = e.target.closest('[data-pd]');
   if (pd) { pickDay = pd.dataset.pd; el('sheet-bd').innerHTML = pickBody(); return; }
-  const p = e.target.closest('[data-pick]');
+  const p = e.target.closest('[data-pick], [data-pid]');
   if (!p) return;
   if (!(AUTH && token)) {                // 투표를 못 하는 사람은 예전처럼 내 조만 바꾸고 닫는다
     pickGroup(Number(p.dataset.pick));
@@ -1874,7 +1936,7 @@ el('sheet-bd').addEventListener('click', e => {
   // 투표로 저장한다. 목/일을 이어서 고를 수 있게 시트는 열어둔다.
   const bd = el('sheet-bd');
   bd.querySelectorAll('button').forEach(b => { b.disabled = true; });
-  sendVote(pickDay, p.dataset.pick === 'jog' ? '조깅' : plan.groups[Number(p.dataset.pick)].id)
+  sendVote(pickDay, p.dataset.pid || (p.dataset.pick === 'jog' ? '조깅' : plan.groups[Number(p.dataset.pick)].id))
     .then(() => { renderAll(); if (pickOn) bd.innerHTML = pickBody(); })
     .catch(() => {
       bd.querySelectorAll('button').forEach(b => { b.disabled = false; });
