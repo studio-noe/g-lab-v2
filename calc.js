@@ -32,7 +32,10 @@ function sets(group, i, type, offsets) {
 // 800+800이므로 한 블록 = 4바퀴(질주 2 + 회복 2), 마지막 회복은 생략한다.
 function laps(group, i, type) {
   const total = type.laps[i], split = type.split[i];
-  const front = group.lap, back = front - type.backFaster, rec = group.lap + type.recAdd;
+  const fixed = type.times && type.times[group.id];
+  const front = fixed ? fixed.rep : group.lap;
+  const back = fixed ? fixed.back : front - type.backFaster;
+  const rec = fixed ? fixed.rec : group.lap + type.recAdd;
 
   const reps = Math.ceil(total / 4), recs = Math.floor(total / 4);
   const fReps = Math.ceil(split / 4), fRecs = Math.floor(split / 4);
