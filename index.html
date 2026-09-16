@@ -958,9 +958,9 @@ const lapTable = t => tbl(
   plan.groups.map((g, i) => { const s = session(g, i, t, plan.offsets);
     return `<tr class="${i === myIdx ? 'on' : ''}"><td>${esc(g.id)}</td>`
       + cell(s.laps + '바퀴', `1~${s.split} / ${s.split + 1}~${s.laps}`)
-      + cell(s.rep + '초', `${s.repPace} / ${s.repTime}`)
+      + cell(s.rep + '초', s.repPace)
       + cell(s.back + '초', s.backPace)
-      + cell(s.rec + '초', `${s.recPace} / ${s.recTime}`)
+      + cell(s.rec + '초', s.recPace)
       + cell(s.km + 'km', '') + cell(s.total, '') + '</tr>'; }).join(''));
 
 const setTable = t => tbl(
