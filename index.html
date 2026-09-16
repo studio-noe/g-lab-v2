@@ -954,14 +954,13 @@ const tbl = (head, rows) =>
   `<div class="scroller"><table><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>`;
 
 const lapTable = t => tbl(
-  '<th>조</th><th>총 바퀴</th><th>전반 질주</th><th>후반 질주</th><th>회복</th><th>질주 횟수</th><th>총거리</th><th>예상</th>',
+  '<th>조</th><th>총 바퀴</th><th>전반 질주</th><th>후반 질주</th><th>회복</th><th>총거리</th><th>예상</th>',
   plan.groups.map((g, i) => { const s = session(g, i, t, plan.offsets);
     return `<tr class="${i === myIdx ? 'on' : ''}"><td>${esc(g.id)}</td>`
       + cell(s.laps + '바퀴', `1~${s.split} / ${s.split + 1}~${s.laps}`)
       + cell(s.rep + '초', `${s.repPace} / ${s.repTime}`)
       + cell(s.back + '초', s.backPace)
       + cell(s.rec + '초', `${s.recPace} / ${s.recTime}`)
-      + cell(s.reps + '회', `회복 ${s.recs}회`)
       + cell(s.km + 'km', '') + cell(s.total, '') + '</tr>'; }).join(''));
 
 const setTable = t => tbl(
@@ -1001,7 +1000,6 @@ function rowsOf(t, s) {
   if (t.mode === 'laps') return [
     ['후반 질주', `${s.back}초`, `${s.backPace} / ${s.split + 1}바퀴부터`],
     ['구간 소요', `질주 ${s.repTime}`, `회복 ${s.recTime}`],
-    ['질주 횟수', `${s.reps}회`, `회복 ${s.recs}회`],
     ['예상 소요', s.total, ''],
   ];
   if (t.mode === 'table') return [
