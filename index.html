@@ -736,7 +736,7 @@ body.locked .wrap,body.locked .sheet,body.locked .scrim{display:none}
 </aside>
 
 <script type="module">
-const { session, zones, pace } = await import('./calc.js?v=' + Date.now());
+const { session, zones, pace, clock } = await import('./calc.js?v=' + Date.now());
 
 const el = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -1013,7 +1013,7 @@ function rowsOf(t, s) {
   ];
   if (t.mode === 'laps') return [
     ['후반 질주', `${s.back}초`, `${s.backPace} / ${s.split + 1}바퀴부터`],
-    ['구간 소요', `질주 ${s.repTime}`, `회복 ${s.recTime}`],
+    ['구간 소요', `질주 ${clock(s.rep)}`, `회복 ${clock(s.rec)} / 400m`],
     ['예상 소요', s.total, ''],
   ];
   if (t.mode === 'table' && t.back) return [
