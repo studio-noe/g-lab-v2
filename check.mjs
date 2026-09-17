@@ -95,3 +95,13 @@ console.log('ok / 기준 자료 8개 조 재현 확인');
 assert.deepEqual(plan.weeks.map(w => w.n), [...Array(19)].map((_, i) => i + 1));
 
 console.log('ok / 원본 표 2종 재현, 등차 확인, 19주차 연속성 확인');
+
+// 9/23 2000+400: 전반/후반 세트 분할. 배포표의 총거리와 평균 페이스 (6조는 배포표 5:19, 계산 5:18)
+const T = plan.types['2000+400분할'];
+[[14, `3'54"`], [14, `4'03"`], [11.6, `4'17"`], [11.6, `4'29"`], [9.2, `4'53"`], [9.2, `5'06"`], [9.2, `5'18"`], [9.2, `5'37"`]]
+  .forEach(([km, avg], i) => {
+    const s = session(plan.groups[i], i, T, plan.offsets);
+    assert.equal(s.km, km, `${plan.groups[i].id} 9/23 총거리`);
+    assert.equal(pace(s.time / s.metres * 400), avg, `${plan.groups[i].id} 9/23 평균`);
+  });
+console.log('ok / 9/23 분할 표 재현');

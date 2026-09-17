@@ -49,13 +49,16 @@ function laps(group, i, type) {
 }
 
 // 표형: 크루가 실제로 배포한 표를 그대로 쓴다. 회복은 페이스가 아니라 시간으로 주어진다.
+// back/split 이 있으면 split 세트까지 rep, 그 뒤로는 back 랩으로 뛴다.
 function table(i, type) {
   const rep = type.reps[i], rec = type.recSec[i], n = type.sets[i];
+  const back = type.back ? type.back[i] : null, split = type.split ? type.split[i] : n;
   return {
-    rep, rec, sets: n, recIsTime: true,
+    rep, rec, sets: n, recIsTime: true, back, split,
     last: type.last ? type.last[i] : '',
     metres: n * type.rep + (n - 1) * type.rec,
-    time: type.time ? type.time[i] * 60 : n * rep * type.rep / 400 + (n - 1) * rec,
+    time: type.time ? type.time[i] * 60
+      : (split * rep + (n - split) * (back || rep)) * type.rep / 400 + (n - 1) * rec,
   };
 }
 

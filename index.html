@@ -742,6 +742,8 @@ const el = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' });
 const md = d => { const [, m, day] = d.split('-'); return `${+m}/${+day}`; };
+// 트랙 훈련은 보통 목요일이지만 연휴에는 당겨진다. 요일은 날짜에서 읽는다.
+const dw = d => '일월화수목금토'[new Date(d + 'T00:00:00Z').getUTCDay()];
 const ZONE = { R:'R 반복', I:'I 인터벌', T:'T 역치', M:'M 마라톤', float:'회복', E:'E 조깅' };
 const cell = (big, small) => `<td><b>${big}</b>${small ? `<s>${small}</s>` : ''}</td>`;
 
@@ -922,7 +924,7 @@ function drawFacts() {
   const g = myIdx >= 0 ? plan.groups[myIdx] : null;
   el('facts').innerHTML = [
     ['이번 주', `<mark>${upcoming.n}</mark>`, `/ ${plan.season.totalWeeks}주차`],
-    ['다음 훈련', md(upcoming.thu), '목'],
+    ['다음 훈련', md(upcoming.thu), dw(upcoming.thu)],
     ['대회까지', raceIn, '일'],
     voteFact() || ['내 조', g ? esc(g.id) : '-', g ? `10km ${esc(g.tenK)}` : '미설정', 'factpick', 'done'],
   ].map(([t, v, u, id, st]) => `<div class="fact${id ? ` tap ${st}` : ''}"${id
@@ -981,10 +983,22 @@ const rawTable = t => tbl(
       + cell(s.sets + '세트', s.last ? `마지막 ${esc(s.last)}` : '')
       + cell(s.km + 'km', '') + cell(s.total, '') + '</tr>'; }).join(''));
 
+// 전반/후반 세트 페이스가 갈리는 표형
+const avgPace = s => pace(s.time / s.metres * 400);
+const splitTable = t => tbl(
+  '<th>조</th><th>세트</th><th>전반 질주</th><th>후반 질주</th><th>회복</th><th>총거리</th><th>예상</th>',
+  plan.groups.map((g, i) => { const s = session(g, i, t, plan.offsets);
+    return `<tr class="${i === myIdx ? 'on' : ''}"><td>${esc(g.id)}</td>`
+      + cell(s.sets + '세트', `1~${s.split} / ${s.split + 1}~${s.sets}`)
+      + cell(s.rep + '초', s.repPace)
+      + cell(s.back + '초', s.backPace)
+      + cell(s.rec + '초', s.recPace)
+      + cell(s.km + 'km', '') + cell(s.total, `평균 ${avgPace(s)}`) + '</tr>'; }).join(''));
+
 // 내 조 카드. 3칸 요약(질주/회복/분량) + 나머지는 라벨 목록.
 // 타입이 달라도 3칸의 의미는 고정한다.
 function factsOf(t, s) {
-  const rec = t.mode === 'table' ? [s.recTime, s.recPace] : [s.rec + '초', s.recPace];
+  const rec = t.mode === 'table' && !t.back ? [s.recTime, s.recPace] : [s.rec + '초', s.recPace];
   const bulk = (t.mode === 'laps' || t.mode === 'ladder')
     ? [s.laps + '바퀴', s.km + 'km'] : [s.sets + '세트', s.km + 'km'];
   const rep = t.mode === 'ladder' ? [s.rep + '초', pace(s.rep) + ' 시작'] : [s.rep + '초', s.repPace];
@@ -1001,6 +1015,10 @@ function rowsOf(t, s) {
     ['후반 질주', `${s.back}초`, `${s.backPace} / ${s.split + 1}바퀴부터`],
     ['구간 소요', `질주 ${s.repTime}`, `회복 ${s.recTime}`],
     ['예상 소요', s.total, ''],
+  ];
+  if (t.mode === 'table' && t.back) return [
+    ['후반 질주', `${s.back}초`, `${s.backPace} / ${s.split + 1}세트부터`],
+    ['예상 소요', s.total, `평균 ${avgPace(s)}`],
   ];
   if (t.mode === 'table') return [
     ['구간 소요', `질주 ${s.repTime}`, ''],
@@ -1129,14 +1147,14 @@ const ladderTable = t => tbl(
       + cell(s.km + 'km', s.laps + '바퀴') + cell(s.total, '') + '</tr>'; }).join(''));
 
 const renderTable = t => t.mode === 'ladder' ? ladderTable(t)
-  : t.mode === 'laps' ? lapTable(t) : t.mode === 'table' ? rawTable(t) : setTable(t);
+  : t.mode === 'laps' ? lapTable(t) : t.mode === 'table' ? (t.back ? splitTable(t) : rawTable(t)) : setTable(t);
 
 const body = (w, withRace, only) => {
   const t = plan.types[w.type];
   return `
     ${withRace && w.race ? `<p class="rcline"><b>대회</b>${esc(w.race)}</p>` : ''}
     ${only === 'l' ? '' : `<div class="blk">
-      <h3><b>목요일</b><span>트랙 ${esc(t ? t.label : w.type)}</span></h3>
+      <h3><b>${dw(w.thu)}요일</b><span>트랙 ${esc(t ? t.label : w.type)}</span></h3>
       ${t && t.rules ? `<ul class="rules">${t.rules.map(r => `<li>${rich(r)}</li>`).join('')}</ul>` : ''}
       ${!t ? '<p class="long">조별표 미정. 훈련 포맷 확정 후 반영</p>' : mineOn(w, 'thu') >= 0 ? mineCard(t, mineOn(w, 'thu')) : renderTable(t)}
       ${t && t.derived ? '<p class="note warn">아래 수치는 실제 배포표가 아니라 조별 기준 페이스에서 계산한 추정치</p>' : ''}
@@ -1150,7 +1168,7 @@ function drawNow() {
   el('now').innerHTML = `
   <div class="hd">
     <span class="wk">${upcoming.n}주차</span>
-    <span class="dt">${md(upcoming.thu)}(목)${upcoming.sun ? ` / ${md(upcoming.sun)}(일)` : ''}</span>
+    <span class="dt">${md(upcoming.thu)}(${dw(upcoming.thu)})${upcoming.sun ? ` / ${md(upcoming.sun)}(일)` : ''}</span>
     ${upcoming.race ? `<span class="rc"><b>${esc(upcoming.race)}</b></span>` : ''}
     <button type="button" class="shr" id="share" aria-label="이번 주 훈련표 이미지로 공유">
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
@@ -1267,7 +1285,7 @@ function month(y, m) {                       // m 은 1~12
       inner += `<i class="${k.kind}"><u>${k.w.n}w</u>${esc(k.label)}</i>`;
       if (k.kind === 'l' && k.w.race) inner += `<i class="r" title="${esc(k.w.race)}">${esc(k.w.race)}</i>`;
       inner = `<button type="button" class="daybtn" data-w="${k.w.n}" data-k="${k.kind}"
-        aria-label="${k.w.n}주차 ${k.kind === 'l' ? '일요일 장거리' : '목요일 트랙'} 훈련표 열기">${inner}</button>`;
+        aria-label="${k.w.n}주차 ${k.kind === 'l' ? '일요일 장거리' : dw(k.w.thu) + '요일 트랙'} 훈련표 열기">${inner}</button>`;
     }
     cells.push(`<td class="${cls}">${inner}</td>`);
   }
@@ -1348,8 +1366,8 @@ function openSheet(w, only) {
   sheetOnly = only || null;
   el('sheet-t').textContent = `${w.n}주차`;
   el('sheet-d').textContent = only === 'l' ? `${md(w.sun)}(일)`
-    : only === 't' ? `${md(w.thu)}(목)`
-    : `${md(w.thu)}(목)${w.sun ? ` / ${md(w.sun)}(일)` : ''}`;
+    : only === 't' ? `${md(w.thu)}(${dw(w.thu)})`
+    : `${md(w.thu)}(${dw(w.thu)})${w.sun ? ` / ${md(w.sun)}(일)` : ''}`;
   el('sheet-bd').innerHTML = body(w, true, sheetOnly);
   sheet.classList.add('open'); scrim.classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -1505,11 +1523,11 @@ const sunLt = () => upcoming.longType && plan.longTypes[upcoming.longType];
 const vopts = d => d === 'sun' && ownGroups(sunLt())
   ? sunLt().groups.map(x => ({ id: x.id, sub: x.tenK })).concat({ id: '조깅', sub: '' })
   : VOPTS;
-const VDAYS = [['thu', '목요일', upcoming.thu], ['sun', '일요일', upcoming.sun]];
+const VDAYS = [['thu', dw(upcoming.thu) + '요일', upcoming.thu], ['sun', '일요일', upcoming.sun]];
 // 목/일 투표를 같이 띄우면 어느 쪽에 투표했는지 헷갈린다. 오늘 요일로 하나만 연다.
 // today 는 KST 날짜 문자열이라 UTC 자정으로 읽어야 요일이 어긋나지 않는다.
 const wd = new Date(today).getUTCDay();          // 0 일 ~ 6 토
-const VDAY = wd >= 1 && wd <= 4 ? 'thu' : 'sun'; // 월~목 → 목요일, 금~일 → 일요일
+const VDAY = wd >= 1 && today <= upcoming.thu ? 'thu' : 'sun'; // 트랙날까지 → 트랙, 그 뒤 ~일 → 일요일
 let voteDay = VDAY;      // 링크로 다른 요일을 볼 수 있다.
 let votePick = false;    // 투표를 마치면 버튼 줄을 접는다. 바꾸기를 누르면 다시 편다.
 let votes = null, voteMe = '';
@@ -1672,7 +1690,7 @@ function openShare() {
   el('sheet-d').textContent = '훈련표 공유';
   el('sheet-bd').innerHTML = `
     <label class="chk"><input type="checkbox" data-blk="0" checked>
-      <b>목요일</b><span>${esc(t ? t.label : upcoming.type)}</span></label>
+      <b>${dw(upcoming.thu)}요일</b><span>${esc(t ? t.label : upcoming.type)}</span></label>
     <label class="chk"><input type="checkbox" data-blk="1" ${upcoming.sun ? 'checked' : 'disabled'}>
       <b>일요일</b><span>${esc(upcoming.sun ? upcoming.long : '일정 없음')}</span></label>
     <a class="go" id="shotgo" role="button" tabindex="0">내보내기</a>`;
@@ -1700,7 +1718,7 @@ async function buildShot(blk) {
     shot.style.width = (tw.length ? Math.max(...tw) : 460) + 64 + 'px';
     const canvas = await html2canvas(shot, { backgroundColor: '#ffffff', scale: 2, logging: false });
     const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
-    const day = blk === 0 ? '목요일' : '일요일';
+    const day = blk === 0 ? dw(upcoming.thu) + '요일' : '일요일';
     return new File([blob], `G-LAB_${upcoming.n}주차_${day}.png`, { type: 'image/png' });
   } finally {
     shot.remove();
