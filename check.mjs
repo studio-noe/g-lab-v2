@@ -54,9 +54,12 @@ plan.weeks.forEach(w => {
 Object.entries(plan.stageOf).forEach(([k, v]) =>
   assert.ok(v === '' || plan.progression.includes(v), `stageOf ${k} -> ${v} 가 progression 에 없다`));
 
-// 정의만 해두고 안 쓰는 타입이 없어야 한다
+// 정의만 해두고 안 쓰는 타입이 없어야 한다.
+// 원본 배포표는 주차에서 빠져도 엔진 검증 기준으로 남긴다 (아래 재현 테스트가 쓴다).
+const REF = ['2000+400', '3000+600'];
 const usedTypes = new Set(plan.weeks.map(w => w.type));
-Object.keys(plan.types).forEach(k => assert.ok(usedTypes.has(k), `쓰이지 않는 타입: ${k}`));
+Object.keys(plan.types).forEach(k =>
+  assert.ok(usedTypes.has(k) || REF.includes(k), `쓰이지 않는 타입: ${k}`));
 
 // 사다리형: 시퀀스에서 계산한 바퀴수가 배포표의 총 바퀴와 맞아야 한다
 const L = plan.types['파틀렉'];
