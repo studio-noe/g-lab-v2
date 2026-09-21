@@ -256,6 +256,7 @@ summary::marker{content:""}
 summary b{flex:none;font-weight:800;letter-spacing:-.01em;font-size:14px;min-width:50px}
 summary .d{flex:none;color:var(--dim);min-width:102px}
 summary .t{flex:none;font-weight:600}
+summary .l{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;color:var(--dim)}
 summary .rc{flex:0 1 auto;min-width:0;margin-left:auto;text-align:right;
  overflow:hidden;text-overflow:ellipsis;font-size:10.5px;letter-spacing:.1em;
  text-transform:uppercase;color:var(--dim)}
@@ -416,6 +417,9 @@ footer{margin:72px 0 0;border-top:2px solid #000;padding-top:14px;font-size:11.5
   summary .d{min-width:94px}
   summary .rc{display:none}
   summary .x{margin-left:auto}
+  /* 펼치면 잘렸던 일요일 메모를 아랫줄에 전부 보여준다 */
+  details[open] summary{flex-wrap:wrap;row-gap:4px}
+  details[open] summary .l{order:9;flex-basis:100%;white-space:normal}
 }
 @media (max-width:600px){
   table.cal td{height:52px;padding:5px 3px 7px}
@@ -1421,6 +1425,7 @@ function drawWeeks(openState) {
         <b>${w.n}주차</b>
         <span class="d">${md(w.thu)}${w.sun ? ' / ' + md(w.sun) : ''}</span>
         <span class="t">${esc(w.label || w.type)}</span>
+        ${w.long ? `<span class="l">${esc(w.long)}</span>` : ''}
         ${w.race ? `<span class="rc">${esc(w.race)}</span>` : ''}
         ${w === upcoming ? '<span class="x"><i>이번 주</i></span>' : ''}
       </summary>
