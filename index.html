@@ -1056,19 +1056,28 @@ const nth = (lt, g, k) => (g.half && k === g.laps.length - 1) ? '0.5회전' : `$
 const ownGroups = lt => !!(lt && lt.groups.length && lt.groups[0].id);
 const segLaps = x => x.segs.reduce((a, [n]) => a + n, 0);
 const segKm = (lt, x) => Math.round(lt.loop * segLaps(x) * 10) / 10;
+// 한 바퀴를 세는 말은 코스마다 다르다 (공원은 회전, 트랙은 바퀴).
+const segUnit = lt => lt.unit || '회전';
 const segStart = (x, k) => x.segs.slice(0, k).reduce((t, [n]) => t + n, 0) + 1;
-const segRange = (x, k) => `${segStart(x, k)}~${segStart(x, k) + x.segs[k][0] - 1}회전`;
+const segRange = (lt, x, k) => `${segStart(x, k)}~${segStart(x, k) + x.segs[k][0] - 1}${segUnit(lt)}`;
+const secOf = v => +v.slice(0, -2) * 60 + +v.slice(-2);
+// 한 바퀴 소요. 트랙에서는 km 페이스보다 이쪽이 실제로 보고 뛰는 값이다.
+const segLap = (lt, v) => clock(secOf(v) * lt.loop);
+const segTime = (lt, x) => {
+  const s = Math.round(x.segs.reduce((t, [n, v]) => t + n * lt.loop * secOf(v), 0));
+  return `${Math.floor(s / 3600)}:${String(Math.floor(s / 60) % 60).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+};
 
 function segTable(lt) {
   // 마무리 구간은 조마다 길이가 달라서(14회전 / 13회전) 헤더는 시작 회전만 적는다.
-  const g0 = lt.groups[0];
+  const g0 = lt.groups[0], u = segUnit(lt);
   return tbl('<th>조</th><th>10km</th>'
-    + g0.segs.map((_, k) => `<th>${k ? segStart(g0, k) + '회전~' : segRange(g0, k)}</th>`).join('')
-    + '<th>평균</th><th>총거리</th><th>대상</th>',
+    + g0.segs.map((_, k) => `<th>${k ? segStart(g0, k) + u + '~' : segRange(lt, g0, k)}</th>`).join('')
+    + '<th>평균</th><th>총거리</th><th>예상</th><th>대상</th>',
     lt.groups.map(x => `<tr><td>${esc(x.id)}</td><td class="pl">${esc(x.tenK)}</td>`
-      + x.segs.map(([, v], k) => cell(mmss(v), k ? segRange(x, k) : '')).join('')
-      + cell(mmss(x.avg), '/km') + cell(segKm(lt, x) + 'km', segLaps(x) + '회전')
-      + `<td class="pl">${esc(x.who)}</td></tr>`).join(''));
+      + x.segs.map(([, v], k) => cell(mmss(v), k ? segRange(lt, x, k) : '')).join('')
+      + cell(mmss(x.avg), '/km') + cell(segKm(lt, x) + 'km', segLaps(x) + u)
+      + cell(segTime(lt, x), '') + `<td class="pl">${esc(x.who)}</td></tr>`).join(''));
 }
 
 function segMine(lt, x) {
@@ -1076,12 +1085,13 @@ function segMine(lt, x) {
   return `<div class="mine-hd"><h4>${esc(x.id)}</h4>
       <span>10km ${esc(x.tenK)} / ${esc(x.who)}</span></div>
     <dl class="facts three">
-      <div class="fact"><dt>총거리</dt><dd>${segKm(lt, x)}km<s>${segLaps(x)}회전</s></dd></div>
+      <div class="fact"><dt>총거리</dt><dd>${segKm(lt, x)}km<s>${segLaps(x)}${segUnit(lt)}</s></dd></div>
       <div class="fact"><dt>평균</dt><dd>${mmss(x.avg)}<s>/km</s></dd></div>
-      <div class="fact"><dt>마무리</dt><dd>${mmss(x.segs[k][1])}<s>${segRange(x, k)}</s></dd></div>
+      <div class="fact"><dt>마무리</dt><dd>${mmss(x.segs[k][1])}<s>${segRange(lt, x, k)}</s></dd></div>
     </dl>
     <dl class="info">
-      ${x.segs.map(([, v], i) => `<div><dt>${segRange(x, i)}</dt><dd>${mmss(v)} <span>/km</span></dd></div>`).join('')}
+      ${x.segs.map(([, v], i) => `<div><dt>${segRange(lt, x, i)}</dt><dd>${mmss(v)} <span>/km · 한 ${segUnit(lt)} ${segLap(lt, v)}</span></dd></div>`).join('')}
+      <div><dt>예상 완주</dt><dd>${segTime(lt, x)}</dd></div>
       <div><dt>대상</dt><dd>${esc(x.who)}</dd></div>
     </dl>`;
 }

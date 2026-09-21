@@ -105,3 +105,19 @@ const T = plan.types['2000+400분할'];
     assert.equal(pace(s.time / s.metres * 400), avg, `${plan.groups[i].id} 9/23 평균`);
   });
 console.log('ok / 9/23 분할 표 재현');
+
+// 9/27 별무리: 배포표의 누적 바퀴와, 표기 평균이 구간 계산 평균과 3초 이내인지
+const B = plan.longTypes['별무리경기장'];
+const sec = v => +v.slice(0, -2) * 60 + +v.slice(-2);
+[95, 95, 95, 95, 88, 88, 88, 88, 80, 80, 80].forEach((laps, i) => {
+  const x = B.groups[i];
+  const n = x.segs.reduce((a, [k]) => a + k, 0);
+  assert.equal(n, laps, `${x.id} 총 바퀴`);
+  const avg = x.segs.reduce((t, [k, v]) => t + k * sec(v), 0) / n;
+  assert.ok(Math.abs(avg - sec(x.avg)) <= 3, `${x.id} 평균 ${x.avg} / 계산 ${Math.round(avg)}초`);
+  // 빌드업이므로 구간은 뒤로 갈수록 빨라야 한다
+  x.segs.forEach(([, v], k) => {
+    if (k) assert.ok(sec(v) < sec(x.segs[k - 1][1]), `${x.id} ${k + 1}구간이 더 느리다`);
+  });
+});
+console.log('ok / 9/27 별무리 구간 확인');
