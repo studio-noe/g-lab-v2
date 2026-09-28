@@ -1000,6 +1000,27 @@ const splitTable = t => tbl(
       + cell(s.km + 'km', s.last ? `마지막 ${esc(s.last)}` : '')
       + cell(s.total, `평균 ${avgPace(s)}`) + '</tr>'; }).join(''));
 
+// 후반 분할이 '마지막 한 세트'뿐이면 배포표 레이아웃 그대로 간다 (10/01 3000+600).
+const lastOnly = t => !!t.back && t.split.every((v, i) => v === t.sets[i] - 1);
+
+// td s 가 display:block 이라 줄을 여러 개 넣을 수 있다.
+const celln = (big, ...lines) =>
+  `<td><b>${big}</b>${lines.filter(Boolean).map(l => `<s>${l}</s>`).join('')}</td>`;
+
+const lastTable = t => tbl(
+  '<th>조</th><th>메인 세트 (질주 + 회복주)</th><th>마지막 세트 (질주)</th><th>완주 기록 (총 거리)</th>',
+  plan.groups.map((g, i) => { const s = session(g, i, t, plan.offsets); const n = s.sets;
+    return `<tr class="${i === myIdx ? 'on' : ''}">`
+      + celln(esc(g.id), `${esc(g.tenK)} 주자`)
+      + celln(`1~${n - 1}세트`,
+          `${s.repM}m 질주 ${s.rep}초 (${s.repPace})`,
+          s.recM ? `+ ${s.recM}m 회복 ${s.rec}초 (${s.recPace})`
+                 : `+ 제자리 휴식 ${s.rec}초 (${s.recTime})`)
+      + celln(s.lastM < s.repM ? `${n - 1}.5세트 (${s.lastM / 400}바퀴)` : `${n}세트`,
+          `${s.lastM}m 질주 ${s.back}초 (${s.backPace})`, '회복주 없음')
+      + celln(`평균 ${avgPace(s)}`, `${s.km}km`, `소요 ${s.total}`)
+      + '</tr>'; }).join(''));
+
 // 내 조 카드. 3칸 요약(질주/회복/분량) + 나머지는 라벨 목록.
 // 타입이 달라도 3칸의 의미는 고정한다.
 function factsOf(t, s) {
@@ -1023,8 +1044,10 @@ function rowsOf(t, s) {
     ['예상 소요', s.total, ''],
   ];
   if (t.mode === 'table' && t.back) return [
-    ['후반 질주', `${s.back}초`, `${s.backPace} / ${s.split + 1}세트부터`],
-    ...(s.last ? [['마지막 세트', s.last, '']] : []),
+    lastOnly(t)
+      ? ['마지막 세트', `${s.lastM}m ${s.back}초`, `${s.backPace} / 회복주 없음`]
+      : ['후반 질주', `${s.back}초`, `${s.backPace} / ${s.split + 1}세트부터`],
+    ...(s.last && !lastOnly(t) ? [['마지막 세트', s.last, '']] : []),
     ['예상 소요', s.total, `평균 ${avgPace(s)}`],
   ];
   if (t.mode === 'table') return [
@@ -1166,7 +1189,9 @@ const ladderTable = t => tbl(
       + cell(s.km + 'km', s.laps + '바퀴') + cell(s.total, '') + '</tr>'; }).join(''));
 
 const renderTable = t => t.mode === 'ladder' ? ladderTable(t)
-  : t.mode === 'laps' ? lapTable(t) : t.mode === 'table' ? (t.back ? splitTable(t) : rawTable(t)) : setTable(t);
+  : t.mode === 'laps' ? lapTable(t)
+  : t.mode === 'table' ? (lastOnly(t) ? lastTable(t) : t.back ? splitTable(t) : rawTable(t))
+  : setTable(t);
 
 const body = (w, withRace, only) => {
   const t = plan.types[w.type];

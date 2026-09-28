@@ -62,7 +62,7 @@ function table(i, type) {
   // 마지막 세트는 따로 센다. 앞 n-1 세트만 split 로 전반/후반이 갈린다.
   const front = Math.min(split, n - 1), rear = Math.max(0, n - 1 - split);
   return {
-    rep, rec, sets: n, recIsTime: true, back, split, last, repM, recM,
+    rep, rec, sets: n, recIsTime: true, back, split, last, repM, recM, lastM,
     metres: (n - 1) * (repM + recM) + lastM,
     time: type.time ? type.time[i] * 60
       : (front * rep + rear * (back || rep)) * repM / 400
