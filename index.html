@@ -996,13 +996,15 @@ const splitTable = t => tbl(
       + cell(s.sets + '세트', `1~${s.split} / ${s.split + 1}~${s.sets}`)
       + cell(s.rep + '초', s.repPace)
       + cell(s.back + '초', s.backPace)
-      + cell(s.rec + '초', s.recPace)
-      + cell(s.km + 'km', '') + cell(s.total, `평균 ${avgPace(s)}`) + '</tr>'; }).join(''));
+      + cell(s.rec + '초', s.recPace || '제자리')
+      + cell(s.km + 'km', s.last ? `마지막 ${esc(s.last)}` : '')
+      + cell(s.total, `평균 ${avgPace(s)}`) + '</tr>'; }).join(''));
 
 // 내 조 카드. 3칸 요약(질주/회복/분량) + 나머지는 라벨 목록.
 // 타입이 달라도 3칸의 의미는 고정한다.
 function factsOf(t, s) {
-  const rec = t.mode === 'table' && !t.back ? [s.recTime, s.recPace] : [s.rec + '초', s.recPace];
+  const rec = t.mode === 'table' && !t.back
+    ? [s.recTime, s.recPace] : [s.rec + '초', s.recPace || '제자리'];
   const bulk = (t.mode === 'laps' || t.mode === 'ladder')
     ? [s.laps + '바퀴', s.km + 'km'] : [s.sets + '세트', s.km + 'km'];
   const rep = t.mode === 'ladder' ? [s.rep + '초', pace(s.rep) + ' 시작'] : [s.rep + '초', s.repPace];
@@ -1022,6 +1024,7 @@ function rowsOf(t, s) {
   ];
   if (t.mode === 'table' && t.back) return [
     ['후반 질주', `${s.back}초`, `${s.backPace} / ${s.split + 1}세트부터`],
+    ...(s.last ? [['마지막 세트', s.last, '']] : []),
     ['예상 소요', s.total, `평균 ${avgPace(s)}`],
   ];
   if (t.mode === 'table') return [

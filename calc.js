@@ -50,15 +50,23 @@ function laps(group, i, type) {
 
 // 표형: 크루가 실제로 배포한 표를 그대로 쓴다. 회복은 페이스가 아니라 시간으로 주어진다.
 // back/split 이 있으면 split 세트까지 rep, 그 뒤로는 back 랩으로 뛴다.
+// last("2000m") 는 마지막 세트만 짧게 끊는 경우. 총거리와 소요에 그대로 반영한다.
+// repM/recM 은 조마다 질주/회복 거리가 다를 때만 쓴다. recM 0 이면 제자리 휴식.
 function table(i, type) {
   const rep = type.reps[i], rec = type.recSec[i], n = type.sets[i];
   const back = type.back ? type.back[i] : null, split = type.split ? type.split[i] : n;
+  const last = type.last ? type.last[i] : '';
+  const repM = type.repM ? type.repM[i] : type.rep;
+  const recM = type.recM ? type.recM[i] : type.rec;
+  const lastM = last ? parseInt(last, 10) : repM;
+  // 마지막 세트는 따로 센다. 앞 n-1 세트만 split 로 전반/후반이 갈린다.
+  const front = Math.min(split, n - 1), rear = Math.max(0, n - 1 - split);
   return {
-    rep, rec, sets: n, recIsTime: true, back, split,
-    last: type.last ? type.last[i] : '',
-    metres: n * type.rep + (n - 1) * type.rec,
+    rep, rec, sets: n, recIsTime: true, back, split, last, repM, recM,
+    metres: (n - 1) * (repM + recM) + lastM,
     time: type.time ? type.time[i] * 60
-      : (split * rep + (n - split) * (back || rep)) * type.rep / 400 + (n - 1) * rec,
+      : (front * rep + rear * (back || rep)) * repM / 400
+        + (n > split ? (back || rep) : rep) * lastM / 400 + (n - 1) * rec,
   };
 }
 
@@ -87,13 +95,14 @@ export function session(group, i, type, offsets) {
   return {
     ...r,
     repPace: pace(r.rep),
-    recPace: pace(r.recIsTime && type.mode !== 'ladder' ? r.rec * 400 / type.rec : r.rec),
+    // 표형 회복은 거리가 0 이면 제자리 휴식이라 페이스가 없다
+    recPace: r.recIsTime && type.mode !== 'ladder'
+      ? (r.recM ? pace(r.rec * 400 / r.recM) : null) : pace(r.rec),
     backPace: r.back ? pace(r.back) : null,
-    repTime: type.mode === 'ladder' ? clock(r.rep * 4) : clock(r.rep * type.rep / 400),
+    repTime: type.mode === 'ladder' ? clock(r.rep * 4) : clock(r.rep * (r.repM || type.rep) / 400),
     // 표형은 회복이 통째로 초 단위, 나머지는 랩타임 x 거리
     recTime: type.mode === 'ladder' ? clock(r.rec)
            : clock(r.recIsTime ? r.rec : r.rec * type.rec / 400),
-    recPaceLap: r.recIsTime ? Math.round(r.rec * 400 / type.rec) : r.rec,
     km: Math.round(r.metres / 100) / 10,
     laps: r.metres / 400,
     total: clock(r.time),

@@ -109,6 +109,21 @@ const T = plan.types['2000+400분할'];
   });
 console.log('ok / 9/23 분할 표 재현');
 
+// 10/01 3000+600: 배포표의 총거리와 평균 페이스.
+// 6조 총거리는 배포표 13.8km 오기 (마지막 2000m 반영하면 12.8km), 7조는 평균 표기 없음
+const H = plan.types['3000+600분할'];
+[[17.4, `3'54"`], [17.4, `4'06"`], [16.4, `4'19"`], [13.8, `4'30"`],
+ [13.8, `4'51"`], [13.8, `5'05"`], [12.8, `5'21"`], [10.4, null]]
+  .forEach(([km, avg], i) => {
+    const s = session(plan.groups[i], i, H, plan.offsets);
+    assert.equal(s.km, km, `${plan.groups[i].id} 10/01 총거리`);
+    if (avg) assert.equal(pace(s.time / s.metres * 400), avg, `${plan.groups[i].id} 10/01 평균`);
+  });
+// 7조만 제자리 휴식이라 회복 페이스가 없다
+assert.equal(session(plan.groups[7], 7, H, plan.offsets).recPace, null, '7조 제자리 휴식');
+assert.ok(session(plan.groups[6], 6, H, plan.offsets).recPace, '6조 회복 페이스');
+console.log('ok / 10/01 3000+600 표 재현');
+
 // 9/27 별무리: 배포표의 누적 바퀴와, 표기 평균이 구간 계산 평균과 3초 이내인지
 const B = plan.longTypes['별무리경기장'];
 const sec = v => +v.slice(0, -2) * 60 + +v.slice(-2);
