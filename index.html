@@ -117,6 +117,7 @@ section{margin:58px 0 0}
 .chk span{font-size:12.5px;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .chk:has(input:disabled){opacity:.45;cursor:default}
 #shotgo{display:flex;width:max-content;margin-left:auto}
+#shotgo[aria-disabled="true"]{opacity:.5;pointer-events:none}
 
 /* 내 조 카드. 표를 눕히지 않고 세워서 가로 스크롤을 없앤다. */
 .mine-hd{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:0 0 2px}
@@ -1770,11 +1771,17 @@ async function buildShot(blk) {
   }
 }
 
+// 렌더에 몇 초 걸린다. 그 사이 한 번 더 누르면 같은 파일이 두 번 만들어진다.
+let shotting = false;
+
 async function makeShot(btn) {
+  if (shotting) return;
   if (typeof html2canvas !== 'function') { alert('이미지 준비 중. 잠시 후 다시 눌러줘'); return; }
   const keep = [...el('sheet-bd').querySelectorAll('[data-blk]')]
     .filter(x => x.checked).map(x => Number(x.dataset.blk));
   if (!keep.length) { alert('하나 이상 선택해줘'); return; }
+  shotting = true;
+  btn.setAttribute('aria-disabled', 'true');
   btn.textContent = '내보내는 중...';
   try {
     const files = [];
@@ -1794,6 +1801,8 @@ async function makeShot(btn) {
   } catch (e) {
     if (e.name !== 'AbortError') alert('이미지를 만들지 못함. 다시 시도해줘');
   } finally {
+    shotting = false;
+    btn.removeAttribute('aria-disabled');
     btn.textContent = '내보내기';
   }
 }
