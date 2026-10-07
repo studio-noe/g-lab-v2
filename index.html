@@ -243,6 +243,10 @@ ul.rules li{position:relative;padding-left:13px;margin-bottom:5px}
 ul.rules li:last-child{margin-bottom:0}
 ul.rules li::before{content:"";position:absolute;left:0;top:.62em;
  width:3px;height:3px;background:#b6b6b6}
+/* 배포표의 꼭지 제목. 불릿 없이 아래 항목들을 거느린다 */
+ul.rules li.sec{padding-left:0;margin:13px 0 6px;color:#000;font-weight:800}
+ul.rules li.sec:first-child{margin-top:0}
+ul.rules li.sec::before{display:none}
 /* 운영진 자료의 강조를 옮긴 것. 회색 본문 사이에서 검게 튀게 한다. */
 ul.rules b,p.note b{color:#000;font-weight:800}
 ul.rules mark,p.note mark{background:var(--acc);color:#000;font-weight:800;padding:0 3px}
@@ -366,6 +370,8 @@ table.cal tbody tr:last-child td{border-bottom:1px solid #000}
 @media (min-width:861px){
   ul.rules{display:grid;grid-template-columns:1fr 1fr;column-gap:30px;row-gap:3px}
   ul.rules li{margin-bottom:0}
+  ul.rules li.sec{grid-column:1/-1;margin:13px 0 4px}
+  ul.rules li.sec:first-child{margin-top:0}
   /* 넓은 화면에서는 접힌 줄에 대회명이 이미 보인다 */
   #weeks .rcline{display:none}
 }
@@ -1200,7 +1206,9 @@ const body = (w, withRace, only) => {
     ${withRace && w.race ? `<p class="rcline"><b>대회</b>${esc(w.race)}</p>` : ''}
     ${only === 'l' ? '' : `<div class="blk">
       <h3><b>${dw(w.thu)}요일</b><span>트랙 ${esc(t ? t.label : w.type)}</span></h3>
-      ${t && t.rules ? `<ul class="rules">${t.rules.map(r => `<li>${rich(r)}</li>`).join('')}</ul>` : ''}
+      ${t && t.rules ? `<ul class="rules">${t.rules.map(r => r.startsWith('## ')
+        ? `<li class="sec">${rich(r.slice(3))}</li>`
+        : `<li>${rich(r)}</li>`).join('')}</ul>` : ''}
       ${!t ? '<p class="long">조별표 미정. 훈련 포맷 확정 후 반영</p>' : mineOn(w, 'thu') >= 0 ? mineCard(t, mineOn(w, 'thu')) : renderTable(t)}
       ${t && t.derived ? '<p class="note warn">아래 수치는 실제 배포표가 아니라 조별 기준 페이스에서 계산한 추정치</p>' : ''}
       ${t && mineOn(w, 'thu') >= 0 ? '<a class="allview" data-all="1" role="button" tabindex="0">전체 조 보기</a>' : ''}
