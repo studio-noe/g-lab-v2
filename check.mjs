@@ -40,8 +40,9 @@ const s0 = session(plan.groups[0], 0, f, plan.offsets);
 assert.equal(s0.km, 15.2);
 assert.equal(s0.reps, 10);
 
+// 362.5초는 정확히 .5 라 내린다 -> 6'02" (아래 P1015 가 16칸으로 고정한다)
 assert.equal(pace(90), `3'45"`);
-assert.equal(pace(145), `6'03"`);
+assert.equal(pace(145), `6'02"`);
 
 // 주차의 훈련 이름은 조별표가 있거나, 적어도 단계 표에 등록돼 있어야 한다
 plan.weeks.forEach(w => {
@@ -62,17 +63,35 @@ Object.keys(plan.types).forEach(k =>
   assert.ok(usedTypes.has(k) || REF.includes(k), `쓰이지 않는 타입: ${k}`));
 
 // 사다리형: 시퀀스에서 계산한 바퀴수가 배포표의 총 바퀴와 맞아야 한다
-const L = plan.types['파틀렉'];
-plan.groups.forEach((g, i) => {
-  const seq = L.seq[i].split('').map(Number);
-  const sprint = seq.reduce((a, b) => a + b, 0);
-  assert.equal(sprint + seq.length - 1, L.laps[i], `${g.id} 사다리 바퀴수`);
-  assert.equal(L.reps[i].length, 4, `${g.id} 블록 랩타임 4개`);
-  // 블록이 짧을수록 빨라야 한다
-  L.reps[i].forEach((v, k) => { if (k) assert.ok(v < L.reps[i][k - 1], `${g.id} ${4 - k}바퀴가 더 느리다`); });
+Object.entries(plan.types).filter(([, t]) => t.mode === 'ladder').forEach(([key, L]) => {
+  plan.groups.forEach((g, i) => {
+    const seq = L.seq[i].split('').map(Number);
+    const sprint = seq.reduce((a, b) => a + b, 0);
+    assert.equal(sprint + seq.length - 1, L.laps[i], `${key} ${g.id} 사다리 바퀴수`);
+    assert.equal(L.reps[i].length, 4, `${key} ${g.id} 블록 랩타임 4개`);
+    // 블록이 짧을수록 빨라야 한다
+    L.reps[i].forEach((v, k) => { if (k) assert.ok(v < L.reps[i][k - 1], `${key} ${g.id} ${4 - k}바퀴가 더 느리다`); });
+  });
 });
-const REC = [102, 106, 112, 118, 124, 128, 134, 144];
-assert.deepEqual(L.rec, REC, '사다리 회복 랩');
+// 배포표 회복 랩 (9/10 원본, 10/15 는 바퀴당 2초 빠른 판)
+assert.deepEqual(plan.types['파틀렉'].rec, [102, 106, 112, 118, 124, 128, 134, 144], '9/10 사다리 회복 랩');
+assert.deepEqual(plan.types['혼합변속주'].rec, [100, 104, 110, 116, 122, 126, 132, 148], '10/15 사다리 회복 랩');
+
+// 10/15 배포표 환산 페이스 그대로 (질주 4/3/2/1바퀴 + 회복). pace() 가 버림이어야 맞는다
+const P1015 = [
+  ['3\'45"', '3\'42"', '3\'37"', '3\'30"', '4\'10"'],
+  ['3\'55"', '3\'52"', '3\'47"', '3\'40"', '4\'20"'],
+  ['4\'10"', '4\'07"', '4\'02"', '3\'55"', '4\'35"'],
+  ['4\'25"', '4\'22"', '4\'17"', '4\'10"', '4\'50"'],
+  ['4\'40"', '4\'37"', '4\'32"', '4\'25"', '5\'05"'],
+  ['4\'50"', '4\'47"', '4\'42"', '4\'35"', '5\'15"'],
+  ['5\'05"', '5\'02"', '4\'57"', '4\'50"', '5\'30"'],
+  ['5\'45"', '5\'42"', '5\'37"', '5\'30"', '6\'10"'],
+];
+plan.groups.forEach((g, i) => {
+  const t = plan.types['혼합변속주'];
+  assert.deepEqual([...t.reps[i].map(pace), pace(t.rec[i])], P1015[i], `10/15 ${g.id} 환산 페이스`);
+});
 
 console.log('ok / 기준 자료 8개 조 재현 확인');
 

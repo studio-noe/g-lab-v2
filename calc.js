@@ -3,7 +3,9 @@
 // float(+10)과 후반 가속(-2)은 기준 배포 자료에서 역산한 확정값이다.
 
 export const pace = lap => {
-  const s = Math.round(lap * 2.5);            // 400m 랩 -> km 페이스
+  // 400m 랩 -> km 페이스. 배포표는 반올림하되 정확히 .5 면 내린다.
+  // 89초 -> 222.5 -> 3'42" (내림), 9/23 평균 242.86 -> 4'03" (올림). 둘 다 이 식으로 맞는다.
+  const s = Math.ceil(lap * 2.5 - 0.5);
   return `${Math.floor(s / 60)}'${String(s % 60).padStart(2, '0')}"`;
 };
 
